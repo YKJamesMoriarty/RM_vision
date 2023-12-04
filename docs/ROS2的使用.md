@@ -1,6 +1,8 @@
 # ROS2的使用
 - [ROS2的使用](#ros2的使用)
 - [新建软件包](#新建软件包)
+  - [编辑CMakeLists.txt](#编辑cmakeliststxt)
+  - [编辑package.xml](#编辑packagexml)
 - [编译项目](#编译项目)
 - [报错](#报错)
   - [编辑器找不到ROS2头文件](#编辑器找不到ros2头文件)
@@ -15,6 +17,77 @@ ros2 pkg create --build-type ament_cmake rm_rune_detector --dependencies rclcpp 
 这将在当前目录下创建一个名为`rm_rune_detector`的新目录，其中包含了一个基本的ROS2软件包结构，以及一个`CMakeLists.txt`文件，该文件已经配置好了对`rclcpp`和`std_msgs`的依赖。
 
 你可以根据需要修改这个命令，将rm_rune_detector替换为你想要的软件包名，将rclcpp和std_msgs替换为你的软件包所依赖的其他ROS2软件包。
+
+## 编辑CMakeLists.txt
+`CMakeLists.txt`用于配置如何构建、编译项目
+
+以下是一个示例，主要要修改`Build`部分的内容(`ament_auto_add_library`和`rclcpp_components_register_node`)
+```cmake
+cmake_minimum_required(VERSION 3.10)
+project(rm_rune_detector)
+
+## Use C++14
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+## By adding -Wall and -Werror, the compiler does not ignore warnings anymore,
+## enforcing cleaner code.
+add_definitions(-Wall -Werror)
+
+## Export compile commands for clangd
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+#######################
+## Find dependencies ##
+#######################
+
+find_package(ament_cmake_auto REQUIRED)
+ament_auto_find_build_dependencies()
+
+###########
+## Build ##
+###########
+
+ament_auto_add_library(${PROJECT_NAME} SHARED
+  src/rm_rune_detector.cpp
+)
+
+rclcpp_components_register_node(${PROJECT_NAME}
+  PLUGIN rm_rune_detector::RMRuneDetector
+  EXECUTABLE ${PROJECT_NAME}_node
+)
+
+#############
+## Testing ##
+#############
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  list(APPEND AMENT_LINT_AUTO_EXCLUDE
+    ament_cmake_copyright
+    ament_cmake_uncrustify
+  )
+  ament_lint_auto_find_test_dependencies()
+endif()
+
+#############
+## Install ##
+#############
+
+ament_auto_package(
+  INSTALL_TO_SHARE
+  launch
+)
+```
+
+## 编辑package.xml
+`package.xml`用于定义包的基本信息和依赖关系。
+
+通过编辑`depend`内容来定义依赖关系。
+```xml
+<depend></depend>
+```
+
 
 # 编译项目
 使用 `colcon build` 来编译项目

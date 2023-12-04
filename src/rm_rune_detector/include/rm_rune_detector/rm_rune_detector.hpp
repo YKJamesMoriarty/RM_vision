@@ -3,14 +3,9 @@
 #ifndef RM_RUNE_DETECTOR__RM_RUNE_DETECTOR_HPP_
 #define RM_RUNE_DETECTOR__RM_RUNE_DETECTOR_HPP_
 
-#include <geometry_msgs/msg/transform_stamped.hpp>
 #include <rclcpp/publisher.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/subscription.hpp>
-#include <serial_driver/serial_driver.hpp>
-#include <std_msgs/msg/float64.hpp>
-#include <std_srvs/srv/trigger.hpp>
-#include <visualization_msgs/msg/marker.hpp>
 
 namespace rm_rune_detector
 {
@@ -22,6 +17,8 @@ namespace rm_rune_detector
         ~RMRuneDetector() override;
 
     private:
+        void DetectRune();
+        std::thread detect_rune_thread_;
     };
 } // namespace rm_rune_detector
 
