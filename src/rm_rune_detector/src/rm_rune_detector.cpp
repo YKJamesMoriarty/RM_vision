@@ -35,11 +35,11 @@
 
 namespace rm_rune_detector
 {
-    RMRuneDetector::RMRuneDetector(const rclcpp::NodeOptions &options)
-        : Node("rm_serial_driver", options)
+    RMRuneDetectorNode::RMRuneDetectorNode(const rclcpp::NodeOptions &options)
+        : Node("rm_rune_detector", options)
     {
         is_detect_rune_ = true;
-        RCLCPP_INFO(this->get_logger(), "Start RuneDetector!");
+        RCLCPP_INFO(this->get_logger(), "Start RMRuneDetectorNode!");
 
         cam_info_sub_ = this->create_subscription<sensor_msgs::msg::CameraInfo>(
             "/camera_info", rclcpp::SensorDataQoS(),
@@ -53,16 +53,15 @@ namespace rm_rune_detector
 
         img_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
             "/image_raw", rclcpp::SensorDataQoS(),
-            std::bind(&RMRuneDetector::ImageCallback, this, std::placeholders::_1));
-
+            std::bind(&RMRuneDetectorNode::ImageCallback, this, std::placeholders::_1));
     }
 
-    void RMRuneDetector::ImageCallback(const sensor_msgs::msg::Image::ConstSharedPtr img_msg)
+    void RMRuneDetectorNode::ImageCallback(const sensor_msgs::msg::Image::ConstSharedPtr img_msg)
     {
         RCLCPP_INFO(this->get_logger(), "Processing rune image...");
     }
 
-    RMRuneDetector::~RMRuneDetector()
+    RMRuneDetectorNode::~RMRuneDetectorNode()
     {
         RCLCPP_INFO(this->get_logger(), "RuneDetectorNode destroyed!");
     }
@@ -72,4 +71,4 @@ namespace rm_rune_detector
 // Register the component with class_loader.
 // This acts as a sort of entry point, allowing the component to be discoverable when its library
 // is being loaded into a running process.
-RCLCPP_COMPONENTS_REGISTER_NODE(rm_rune_detector::RMRuneDetector)
+RCLCPP_COMPONENTS_REGISTER_NODE(rm_rune_detector::RMRuneDetectorNode)

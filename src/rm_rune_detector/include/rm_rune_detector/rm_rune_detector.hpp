@@ -13,12 +13,12 @@
 #include "rm_rune_detector/pnp_solver.hpp"
 namespace rm_rune_detector
 {
-    class RMRuneDetector : public rclcpp::Node
+    class RMRuneDetectorNode : public rclcpp::Node
     {
     public:
-        explicit RMRuneDetector(const rclcpp::NodeOptions &options);
+        explicit RMRuneDetectorNode(const rclcpp::NodeOptions &options);
 
-        ~RMRuneDetector() override;
+        ~RMRuneDetectorNode() override;
 
     private:
         void ImageCallback(const sensor_msgs::msg::Image::ConstSharedPtr img_msg);
@@ -26,7 +26,7 @@ namespace rm_rune_detector
 
         // Image subscrpition
         rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr img_sub_;
-        
+
         // Camera info part
         rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr cam_info_sub_;
         cv::Point2f cam_center_;

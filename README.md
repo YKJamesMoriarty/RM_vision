@@ -32,12 +32,23 @@ colcon build --symlink-install
 
 
 启动所有模块
-```shell
-sudo chmod 777 /dev/ttyACM0
+- rm_vision
+  ```shell
+  sudo chmod 777 /dev/ttyACM0
 
-source install/setup.bash
-ros2 launch rm_vision_bringup vision_bringup.launch.py
-```
+  source install/setup.bash
+  ros2 launch rm_vision_bringup vision_bringup.launch.py
+  ```
+- 步兵
+  ```shell
+  sudo chmod 777 /dev/ttyACM0
+
+  source install/setup.bash
+  ros2 launch rm_vision_bringup infantry_bringup.launch.py
+  ```
+- 英雄
+- 工程
+- 哨兵
 
 启动可视化
 ```shell

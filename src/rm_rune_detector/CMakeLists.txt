@@ -17,6 +17,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #######################
 
 find_package(ament_cmake_auto REQUIRED)
+find_package(OpenCV REQUIRED)
 ament_auto_find_build_dependencies()
 
 ###########
@@ -28,8 +29,8 @@ ament_auto_add_library(${PROJECT_NAME} SHARED
 )
 
 rclcpp_components_register_node(${PROJECT_NAME}
-  PLUGIN rm_rune_detector::RMRuneDetector
-  EXECUTABLE ${PROJECT_NAME}_node
+  PLUGIN rm_rune_detector::RMRuneDetectorNode
+  EXECUTABLE rm_rune_detector_node
 )
 
 #############
