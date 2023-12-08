@@ -64,6 +64,18 @@ def generate_launch_description():
                        'serial_driver:='+launch_params['serial_log_level']],
     )
 
+    rune_detector_node = Node(
+        package='rm_rune_detector',
+        executable='rm_rune_detector_node',
+        name='rm_rune_detector',
+        output='both',
+        emulate_tty=True,
+        parameters=[node_params],
+        on_exit=Shutdown(),
+        ros_arguments=['--ros-args', '--log-level',
+                       'rm_rune_detector:='+launch_params['detector_log_level']],
+    )
+
     delay_serial_node = TimerAction(
         period=1.5,
         actions=[serial_driver_node],
@@ -79,4 +91,5 @@ def generate_launch_description():
         cam_detector,
         delay_serial_node,
         delay_tracker_node,
+        rune_detector_node,
     ])
