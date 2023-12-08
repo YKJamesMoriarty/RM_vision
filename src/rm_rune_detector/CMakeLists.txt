@@ -25,7 +25,7 @@ ament_auto_find_build_dependencies()
 ###########
 
 ament_auto_add_library(${PROJECT_NAME} SHARED
-  src/rm_rune_detector.cpp
+  DIRECTORY src
 )
 
 rclcpp_components_register_node(${PROJECT_NAME}
