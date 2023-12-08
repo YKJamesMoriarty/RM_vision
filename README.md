@@ -70,6 +70,11 @@ ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765
     ros2 launch rm_serial_driver serial_driver.launch.py
     ```
 
+- 能量机关识别模块
+    ```Shell
+    source install/setup.bash
+    ros2 launch rm_rune_detector rm_rune_detector.launch.py
+    ```
 
 </details>
 

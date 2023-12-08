@@ -38,24 +38,32 @@ namespace rm_rune_detector
     RMRuneDetector::RMRuneDetector(const rclcpp::NodeOptions &options)
         : Node("rm_serial_driver", options)
     {
+        is_detect_rune_ = true;
         RCLCPP_INFO(this->get_logger(), "Start RuneDetector!");
-        detect_rune_thread_ = std::thread(std::bind(&RMRuneDetector::DetectRune, this));
+
+        cam_info_sub_ = this->create_subscription<sensor_msgs::msg::CameraInfo>(
+            "/camera_info", rclcpp::SensorDataQoS(),
+            [this](sensor_msgs::msg::CameraInfo::ConstSharedPtr camera_info)
+            {
+                cam_center_ = cv::Point2f(camera_info->k[2], camera_info->k[5]);
+                cam_info_ = std::make_shared<sensor_msgs::msg::CameraInfo>(*camera_info);
+                pnp_solver_ = std::make_unique<PnPSolver>(camera_info->k, camera_info->d);
+                cam_info_sub_.reset();
+            });
+
+        img_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
+            "/image_raw", rclcpp::SensorDataQoS(),
+            std::bind(&RMRuneDetector::ImageCallback, this, std::placeholders::_1));
+
     }
 
-    void RMRuneDetector::DetectRune()
+    void RMRuneDetector::ImageCallback(const sensor_msgs::msg::Image::ConstSharedPtr img_msg)
     {
-        while (rclcpp::ok())
-        {
-            RCLCPP_INFO(this->get_logger(), "Detecting rune...");
-        }
+        RCLCPP_INFO(this->get_logger(), "Processing rune image...");
     }
 
     RMRuneDetector::~RMRuneDetector()
     {
-        if (detect_rune_thread_.joinable())
-        {
-            detect_rune_thread_.join();
-        }
         RCLCPP_INFO(this->get_logger(), "RuneDetectorNode destroyed!");
     }
 }
