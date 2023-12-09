@@ -71,13 +71,13 @@ namespace rm_rune_detector
     void RMRuneDetectorNode::ImageCallback(const sensor_msgs::msg::Image::ConstSharedPtr img_msg)
     {
         RCLCPP_INFO(this->get_logger(), "Processing rune image...");
-        auto runes = DetectRunes(img_msg);
+        auto targets = DetectRunes(img_msg);
     }
 
     /**
-     * @brief 识别图中的能量机关靶标
+     * @brief 识别图中的能量机关靶标（包括已激活的和未激活的靶标）
      * @param img_msg
-     * @return
+     * @return 所有靶标的数组
      */
     std::vector<Target> RMRuneDetectorNode::DetectRunes(const sensor_msgs::msg::Image::ConstSharedPtr &img_msg)
     {
