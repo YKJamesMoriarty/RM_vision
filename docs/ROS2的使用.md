@@ -6,6 +6,7 @@
 - [编译项目](#编译项目)
 - [报错](#报错)
   - [编辑器找不到ROS2头文件](#编辑器找不到ros2头文件)
+  - [undefined symbol](#undefined-symbol)
 
 # 新建软件包
 在ROS2中，你可以使用 `ros2 pkg create` 命令来创建一个新的C++软件包。
@@ -113,4 +114,21 @@ colcon build --symlink-install
 
 ```
 /opt/ros/humble/**
+```
+## undefined symbol
+形如以下报错，估计是cmakelist编写问题导致部分文件没有被编译。
+```shell
+[rm_rune_detector_node-3] /home/polarbear/Desktop/Polarbear_Vision_ws/PB_RM_Vision/install/rm_rune_detector/lib/rm_rune_detector/rm_rune_detector_node: symbol lookup error: /home/polarbear/Desktop/Polarbear_Vision_ws/PB_RM_Vision/install/rm_rune_detector/lib/librm_rune_detector.so: undefined symbol: _ZN16rm_rune_detector9PnPSolverC1ERKSt5arrayIdLm9EERKSt6vectorIdSaIdEE
+```
+将`ament_auto_add_library`中的文件
+```cmake
+ament_auto_add_library(${PROJECT_NAME} SHARED
+  src/rm_rune_detector.cpp
+)
+```
+改为`src`文件夹即可。
+```cmake
+ament_auto_add_library(${PROJECT_NAME} SHARED
+  DIRECTORY src
+)
 ```
