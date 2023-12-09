@@ -1,6 +1,6 @@
 /**
   ****************************(C) COPYRIGHT 2023 Polarbear*************************
-  * @file       rm_rune_detector.cpp
+  * @file       rm_rune_detector_node.cpp
   * @brief      能量机关检测模块
   * @note
   * @history
@@ -29,6 +29,7 @@
 
 #include "rm_rune_detector/rune.hpp"
 #include "rm_rune_detector/rm_rune_detector_node.hpp"
+#include "rm_rune_detector/rune_detector.hpp"
 
 namespace rm_rune_detector
 {
@@ -41,6 +42,8 @@ namespace rm_rune_detector
     {
         is_detect_rune_ = true;
         RCLCPP_INFO(this->get_logger(), "Start RMRuneDetectorNode!");
+
+        detector_ = InitDetector();
 
         // Debug Publishers
         debug_ = this->declare_parameter("debug", false);
@@ -64,6 +67,38 @@ namespace rm_rune_detector
             std::bind(&RMRuneDetectorNode::ImageCallback, this, std::placeholders::_1));
     }
 
+    std::unique_ptr<RuneDetector> RMRuneDetectorNode::InitDetector()
+    {
+        // Init Rune Detector
+        rcl_interfaces::msg::ParameterDescriptor param_desc;
+        param_desc.integer_range.resize(1);
+        param_desc.integer_range[0].step = 1;
+        param_desc.integer_range[0].from_value = 0;
+        param_desc.integer_range[0].to_value = 255;
+        int binary_thres = declare_parameter("binary_thres", 160, param_desc);
+
+        param_desc.description = "0-RED, 1-BLUE";
+        param_desc.integer_range[0].from_value = 0;
+        param_desc.integer_range[0].to_value = 1;
+        auto detect_color = declare_parameter("detect_color", RED, param_desc);
+
+        RuneDetector::HSVParams hsv = {
+            .red_min = {3, 0, 100},
+            .red_max = {35, 255, 255},
+            .blue_min = {77, 0, 199},
+            .blue_max = {103, 120, 255},
+        };
+
+        RuneDetector::TargetParams t_params = {
+            .min_ratio = 0.9,
+            .max_ratio = 1.1,
+        };
+        
+        auto rune_detector = std::make_unique<RuneDetector>(binary_thres, detect_color, t_params, hsv);
+        
+        return rune_detector;
+    }
+
     /**
      * @brief 处理图像，检测能量机关并预测打击位置的回调函数
      * @param img_msg
@@ -71,6 +106,7 @@ namespace rm_rune_detector
     void RMRuneDetectorNode::ImageCallback(const sensor_msgs::msg::Image::ConstSharedPtr img_msg)
     {
         RCLCPP_INFO(this->get_logger(), "Processing rune image...");
+        // TODO: 识别图中的能量机关靶标后发布靶标信息
         auto targets = DetectRunes(img_msg);
     }
 
@@ -84,45 +120,12 @@ namespace rm_rune_detector
         RCLCPP_INFO(this->get_logger(), "Detecting rune...");
         // Convert ROS img to cv::Mat
         auto img = cv_bridge::toCvShare(img_msg, "rgb8")->image;
-        
+
         // auto armors = detector_->detect(img);
         std::vector<Target> armors;
-        
+        // TODO: 识别图中的能量机关靶标并得到目标列表
         if (debug_)
         {
-            // binary_img_pub_.publish(
-            //     cv_bridge::CvImage(img_msg->header, "mono8", detector_->binary_img).toImageMsg());
-
-            // // Sort lights and armors data by x coordinate
-            // std::sort(
-            //     detector_->debug_lights.data.begin(), detector_->debug_lights.data.end(),
-            //     [](const auto &l1, const auto &l2)
-            //     { return l1.center_x < l2.center_x; });
-            // std::sort(
-            //     detector_->debug_armors.data.begin(), detector_->debug_armors.data.end(),
-            //     [](const auto &a1, const auto &a2)
-            //     { return a1.center_x < a2.center_x; });
-
-            // lights_data_pub_->publish(detector_->debug_lights);
-            // armors_data_pub_->publish(detector_->debug_armors);
-
-            // if (!armors.empty())
-            // {
-            //     auto all_num_img = detector_->getAllNumbersImage();
-            //     number_img_pub_.publish(
-            //         *cv_bridge::CvImage(img_msg->header, "mono8", all_num_img).toImageMsg());
-            // }
-
-            // detector_->drawResults(img);
-            // // Draw camera center
-            // cv::circle(img, cam_center_, 5, cv::Scalar(255, 0, 0), 2);
-            // // Draw latency
-            // std::stringstream latency_ss;
-            // latency_ss << "Latency: " << std::fixed << std::setprecision(2) << latency << "ms";
-            // auto latency_s = latency_ss.str();
-            // cv::putText(
-            //     img, latency_s, cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 255, 0), 2);
-            // result_img_pub_.publish(cv_bridge::CvImage(img_msg->header, "rgb8", img).toImageMsg());
         }
         return armors;
     }
@@ -146,7 +149,7 @@ namespace rm_rune_detector
     {
         RCLCPP_INFO(this->get_logger(), "RuneDetectorNode destroyed!");
     }
-}// namespace rm_rune_detector
+} // namespace rm_rune_detector
 
 #include "rclcpp_components/register_node_macro.hpp"
 // Register the component with class_loader.

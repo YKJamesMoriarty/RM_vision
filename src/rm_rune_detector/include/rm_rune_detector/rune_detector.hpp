@@ -1,22 +1,73 @@
+/**
+  ****************************(C) COPYRIGHT 2023 Polarbear*************************
+  * @file       rune_detector.hpp
+  * @brief      能量机关检测模块检测图片中的能量机关靶标
+  * @note
+  * @history
+  *  Version    Date            Author          Modification
+  *  V1.0.0     2023-12-13      Penguin         1. done
+  *
+  @verbatim
+  =================================================================================
+
+  =================================================================================
+  @endverbatim
+  ****************************(C) COPYRIGHT 2023 Polarbear*************************
+  */
 #ifndef RUNE_DETECTOR__DETECTOR_HPP_
 #define RUNE_DETECTOR__DETECTOR_HPP_
 
 // OpenCV
 #include <opencv2/core.hpp>
 
+#include "rm_rune_detector/rune.hpp"
+
 namespace rm_rune_detector
 {
+    struct HSV
+    {
+        int H;
+        int S;
+        int V;
+    };
     class RuneDetector
     {
     public:
-        RuneDetector(const int &bin_thres, const int &color);
+        struct TargetParams
+        {
+            // minor_axis / major_axis
+            float min_ratio;
+            float max_ratio;
+        };
+
+        struct HSVParams
+        {
+            HSV red_min;
+            HSV red_max;
+            HSV blue_min;
+            HSV blue_max;
+        };
+
+        RuneDetector(const int &bin_thres, const int &color, const TargetParams &t, const HSVParams &hsv);
+
+        std::vector<Target> Detect(const cv::Mat &input);
+
         int binary_thres;
         int detect_color;
 
         // Debug msgs
         cv::Mat binary_img;
 
+        TargetParams t;
+        HSVParams hsv;
+
     private:
+        void PreprocessImage(const cv::Mat &input, const cv::Mat &output);
+        std::vector<Ellipse> FindPossibleTargets(const cv::Mat &rbg_img, const cv::Mat &binary_img);
+        std::vector<Target> FilterTargets(const std::vector<Ellipse> &possible_targets);
+
+        std::vector<Ellipse> ellipse_;
+        std::vector<Target> targets_;
     };
 
 } // namespace rm_rune_detector

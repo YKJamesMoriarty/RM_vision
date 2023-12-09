@@ -1,6 +1,6 @@
 /**
   ****************************(C) COPYRIGHT 2023 Polarbear*************************
-  * @file       rm_rune_detector.hpp
+  * @file       rm_rune_detector_node.hpp
   * @brief      能量机关检测模块
   * @note
   * @history
@@ -42,6 +42,8 @@ namespace rm_rune_detector
         void ImageCallback(const sensor_msgs::msg::Image::ConstSharedPtr img_msg);
 
         std::vector<Target> DetectRunes(const sensor_msgs::msg::Image::ConstSharedPtr &img_msg);
+
+        std::unique_ptr<RuneDetector> InitDetector();
 
         void CreateDebugPublishers();
 
