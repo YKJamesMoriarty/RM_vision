@@ -47,6 +47,12 @@ colcon build --symlink-install
   ros2 launch rm_vision_bringup infantry_bringup.launch.py
   ```
 - 英雄
+  ```shell
+  sudo chmod 777 /dev/ttyACM0
+
+  source install/setup.bash
+  ros2 launch rm_vision_bringup hero_bringup.launch.py
+  ```
 - 工程
 - 哨兵
 
