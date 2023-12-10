@@ -291,10 +291,8 @@ void RMSerialDriver::reopenPort()
 
 void RMSerialDriver::setParam(const rclcpp::Parameter & param)
 {
-  if (
-    !detector_param_client_->service_is_ready() ||
-    !rune_detector_param_client_->service_is_ready()) {
-    RCLCPP_WARN(get_logger(), "Service not ready, skipping parameter set");
+  if (!detector_param_client_->service_is_ready()) {
+    RCLCPP_WARN(get_logger(), "Armor service not ready, skipping parameter set");
     return;
   }
 
@@ -314,8 +312,18 @@ void RMSerialDriver::setParam(const rclcpp::Parameter & param)
         RCLCPP_INFO(get_logger(), "Successfully set detect_color to %ld!", param.as_int());
         initial_set_param_ = true;
       });
+  }
 
-    set_param_future_ = rune_detector_param_client_->set_parameters(
+  if (!rune_detector_param_client_->service_is_ready()) {
+    RCLCPP_WARN(get_logger(), "Rune service not ready, skipping parameter set");
+    return;
+  }
+
+  if (
+    !set_rune_detector_param_future_.valid() ||
+    set_rune_detector_param_future_.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+    RCLCPP_INFO(get_logger(), "Setting detect_color to %ld...", param.as_int());
+    set_rune_detector_param_future_ = rune_detector_param_client_->set_parameters(
       {param}, [this, param](const ResultFuturePtr & results) {
         for (const auto & result : results.get()) {
           if (!result.successful) {
@@ -324,7 +332,6 @@ void RMSerialDriver::setParam(const rclcpp::Parameter & param)
           }
         }
         RCLCPP_INFO(get_logger(), "Successfully set detect_color to %ld!", param.as_int());
-        initial_set_param_ = true;
       });
   }
 }

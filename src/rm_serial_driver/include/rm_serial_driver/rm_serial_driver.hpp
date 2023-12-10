@@ -59,6 +59,7 @@ private:
   rclcpp::AsyncParametersClient::SharedPtr detector_param_client_;
   rclcpp::AsyncParametersClient::SharedPtr rune_detector_param_client_;
   ResultFuturePtr set_param_future_;
+  ResultFuturePtr set_rune_detector_param_future_;
 
   // Service client to reset tracker
   rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr reset_tracker_client_;
