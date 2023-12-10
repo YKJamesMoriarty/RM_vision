@@ -51,12 +51,18 @@ namespace rm_rune_detector
     std::vector<Target> RuneDetector::Detect(const cv::Mat &input)
     {
         // TODO:完成能量机关靶标的检测与状态判别
+        binary_img = PreprocessImage(input);
         std::vector<Target> res_tmp;
         targets_ = res_tmp;
         return targets_;
     }
 
-    void RuneDetector::PreprocessImage(const cv::Mat &input, const cv::Mat &output)
+    /**
+     * @brief 对输入图像进行预处理
+     * @param input 输入图像
+     * @param output 输出图像
+     */
+    cv::Mat RuneDetector::PreprocessImage(const cv::Mat &input)
     {
         // TODO:完成图像预处理，将返回图像部分放至参数部分
 
@@ -77,12 +83,27 @@ namespace rm_rune_detector
 
         // 对mask进行图形学操作
         cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
-        
-        // 对 mask 进行开运算
-        // cv::Mat opened_mask;
-        cv::morphologyEx(mask, output, cv::MORPH_OPEN, kernel, cv::Point(-1, -1), 2);
 
-        // return opened_mask;
+        // 对 mask 进行开运算
+        cv::Mat opened_mask;
+        cv::morphologyEx(mask, opened_mask, cv::MORPH_OPEN, kernel, cv::Point(-1, -1), 2);
+
+        return opened_mask;
     }
 
+    /**
+     * @brief 在输入图像中寻找可能的靶标
+     * @param rbg_img rgb图像
+     * @param binary_img 二值化图像
+     * @return 可能的靶标列表
+     */
+    std::vector<Ellipse> RuneDetector::FindPossibleTargets(const cv::Mat &rbg_img, const cv::Mat &binary_img)
+    {
+        using std::vector;
+        vector<vector<cv::Point>> contours;
+        vector<cv::Vec4i> hierarchy;
+        cv::findContours(binary_img, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+    
+        return vector<Ellipse>();
+    }
 } // namespace rm_rune_detector

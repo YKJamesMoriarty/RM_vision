@@ -52,6 +52,14 @@ namespace rm_rune_detector
             CreateDebugPublishers();
         }
 
+        // Debug param change moniter
+        // debug_param_sub_ = std::make_shared<rclcpp::ParameterEventHandler>(this);
+        // debug_cb_handle_ =
+        //     debug_param_sub_->add_parameter_callback("debug", [this](const rclcpp::Parameter &p)
+        //                                              {
+        //             debug_ = p.as_bool();
+        //             debug_ ? CreateDebugPublishers() : DestroyDebugPublishers(); });
+
         cam_info_sub_ = this->create_subscription<sensor_msgs::msg::CameraInfo>(
             "/camera_info", rclcpp::SensorDataQoS(),
             [this](sensor_msgs::msg::CameraInfo::ConstSharedPtr camera_info)
@@ -93,9 +101,9 @@ namespace rm_rune_detector
             .min_ratio = 0.9,
             .max_ratio = 1.1,
         };
-        
+
         auto rune_detector = std::make_unique<RuneDetector>(binary_thres, detect_color, t_params, hsv);
-        
+
         return rune_detector;
     }
 
@@ -105,7 +113,6 @@ namespace rm_rune_detector
      */
     void RMRuneDetectorNode::ImageCallback(const sensor_msgs::msg::Image::ConstSharedPtr img_msg)
     {
-        RCLCPP_INFO(this->get_logger(), "Processing rune image...");
         // TODO: 识别图中的能量机关靶标后发布靶标信息
         auto targets = DetectRunes(img_msg);
     }
@@ -117,17 +124,26 @@ namespace rm_rune_detector
      */
     std::vector<Target> RMRuneDetectorNode::DetectRunes(const sensor_msgs::msg::Image::ConstSharedPtr &img_msg)
     {
-        RCLCPP_INFO(this->get_logger(), "Detecting rune...");
+        // RCLCPP_INFO(this->get_logger(), "Detecting rune, Debug = %d", debug_);
+        // RCLCPP_INFO(this->get_logger(), "Detecting rune, detet color = %s", detector_->detect_color ? "blue" : "red");
+        RCLCPP_INFO(this->get_logger(), "Detecting rune, detet color = %d", detector_->detect_color);
+        // RCLCPP_INFO(this->get_logger(), "Detecting rune...");
+
         // Convert ROS img to cv::Mat
         auto img = cv_bridge::toCvShare(img_msg, "rgb8")->image;
 
-        // auto armors = detector_->detect(img);
-        std::vector<Target> armors;
+        // Update params
+        detector_->binary_thres = get_parameter("binary_thres").as_int();
+        detector_->detect_color = get_parameter("detect_color").as_int();
+
         // TODO: 识别图中的能量机关靶标并得到目标列表
+        std::vector<Target> targets = detector_->Detect(img);
         if (debug_)
         {
+            binary_img_pub_.publish(
+                cv_bridge::CvImage(img_msg->header, "mono8", detector_->binary_img).toImageMsg());
         }
-        return armors;
+        return targets;
     }
 
     /**
@@ -140,9 +156,19 @@ namespace rm_rune_detector
         // armors_data_pub_ =
         //     this->create_publisher<auto_aim_interfaces::msg::DebugArmors>("/detector/debug_armors", 10);
 
-        binary_img_pub_ = image_transport::create_publisher(this, "/detector/binary_img");
-        number_img_pub_ = image_transport::create_publisher(this, "/detector/number_img");
-        result_img_pub_ = image_transport::create_publisher(this, "/detector/result_img");
+        binary_img_pub_ = image_transport::create_publisher(this, "/rune_detector/binary_img");
+        number_img_pub_ = image_transport::create_publisher(this, "/rune_detector/number_img");
+        result_img_pub_ = image_transport::create_publisher(this, "/rune_detector/result_img");
+    }
+
+    void RMRuneDetectorNode::DestroyDebugPublishers()
+    {
+        // lights_data_pub_.reset();
+        // armors_data_pub_.reset();
+
+        binary_img_pub_.shutdown();
+        number_img_pub_.shutdown();
+        result_img_pub_.shutdown();
     }
 
     RMRuneDetectorNode::~RMRuneDetectorNode()

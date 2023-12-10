@@ -95,6 +95,13 @@ ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765
 
 </details>
 
+## 相关信息
+### 通讯协议
+
+### 颜色定义
+- `0` - `red`
+- `1` - `blue`
+
 ## 其他文档
 rm_vision 部署文档： [部署华师视觉项目](https://flowus.cn/lihanchen/share/0d472992-f136-4e0e-856f-89328e99c684) \
 测算相机畸变与内参矩阵：[相机标定](https://flowus.cn/lihanchen/share/02a518a0-f1bb-47a5-8313-55f75bab21b5)

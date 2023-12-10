@@ -58,14 +58,14 @@ namespace rm_rune_detector
         // Debug msgs
         cv::Mat binary_img;
 
-        TargetParams t;
-        HSVParams hsv;
 
     private:
-        void PreprocessImage(const cv::Mat &input, const cv::Mat &output);
+        cv::Mat PreprocessImage(const cv::Mat &input);
         std::vector<Ellipse> FindPossibleTargets(const cv::Mat &rbg_img, const cv::Mat &binary_img);
         std::vector<Target> FilterTargets(const std::vector<Ellipse> &possible_targets);
 
+        TargetParams t;
+        HSVParams hsv;
         std::vector<Ellipse> ellipse_;
         std::vector<Target> targets_;
     };

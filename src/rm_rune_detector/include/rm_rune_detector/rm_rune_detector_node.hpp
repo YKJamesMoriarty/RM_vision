@@ -47,6 +47,8 @@ namespace rm_rune_detector
 
         void CreateDebugPublishers();
 
+        void DestroyDebugPublishers();
+
         bool is_detect_rune_;
 
         // Rune Detector

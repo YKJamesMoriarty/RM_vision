@@ -57,6 +57,7 @@ private:
   bool initial_set_param_ = false;
   uint8_t previous_receive_color_ = 0;
   rclcpp::AsyncParametersClient::SharedPtr detector_param_client_;
+  rclcpp::AsyncParametersClient::SharedPtr rune_detector_param_client_;
   ResultFuturePtr set_param_future_;
 
   // Service client to reset tracker
