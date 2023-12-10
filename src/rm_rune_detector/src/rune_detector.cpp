@@ -80,6 +80,10 @@ namespace rm_rune_detector
         {
             cv::inRange(hsv_image, cv::Scalar(hsv.blue_min.H, hsv.blue_min.S, hsv.blue_min.V), cv::Scalar(hsv.blue_max.H, hsv.blue_max.S, hsv.blue_max.V), mask);
         }
+        else
+        {
+            cv::inRange(hsv_image, cv::Scalar(hsv.red_min.H, hsv.red_min.S, hsv.red_min.V), cv::Scalar(hsv.red_max.H, hsv.red_max.S, hsv.red_max.V), mask);
+        }
 
         // 对mask进行图形学操作
         cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
@@ -103,7 +107,7 @@ namespace rm_rune_detector
         vector<vector<cv::Point>> contours;
         vector<cv::Vec4i> hierarchy;
         cv::findContours(binary_img, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-    
+
         return vector<Ellipse>();
     }
 } // namespace rm_rune_detector

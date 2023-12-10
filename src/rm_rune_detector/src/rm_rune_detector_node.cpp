@@ -134,7 +134,8 @@ namespace rm_rune_detector
 
         // Update params
         detector_->binary_thres = get_parameter("binary_thres").as_int();
-        detector_->detect_color = get_parameter("detect_color").as_int();
+        // detector_->detect_color = get_parameter("detect_color").as_int();
+        detector_->detect_color = 1 - get_parameter("detect_color").as_int();//这里使用1-是因为serial的数据中设置的是识别装甲板的颜色，也就是对方的颜色，而能量机关则是己方的颜色，所以要取反
 
         // TODO: 识别图中的能量机关靶标并得到目标列表
         std::vector<Target> targets = detector_->Detect(img);
