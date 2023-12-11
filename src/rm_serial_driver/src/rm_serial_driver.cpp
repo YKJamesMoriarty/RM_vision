@@ -1,6 +1,21 @@
-// Copyright (c) 2022 ChenJun
-// Licensed under the Apache-2.0 License.
+/**
+  ****************************(C) COPYRIGHT 2023 Polarbear*************************
+  * @file       rm_serial_driver.cpp
+  * @brief      串口通信模块
+  * @note       感谢@ChenJun创建本模块并开源，
+  *             现内容为北极熊基于开源模块进行修改并适配自己的车车后的结果。
+  * @history
+  *  Version    Date            Author          Modification
+  *  V1.0.0     2022            ChenJun         1. done
+  *  V1.0.1     2023-12-11      Penguin         1. 添加与rm_rune_dector_node模块连接的Client
+  *
+  @verbatim
+  =================================================================================
 
+  =================================================================================
+  @endverbatim
+  ****************************(C) COPYRIGHT 2023 Polarbear*************************
+  */
 #include <tf2/LinearMath/Quaternion.h>
 
 #include <rclcpp/logging.hpp>
@@ -42,6 +57,8 @@ RMSerialDriver::RMSerialDriver(const rclcpp::NodeOptions & options)
 
   // Detect parameter client
   detector_param_client_ = std::make_shared<rclcpp::AsyncParametersClient>(this, "armor_detector");
+  rune_detector_param_client_ =
+    std::make_shared<rclcpp::AsyncParametersClient>(this, "rm_rune_detector");
 
   // Tracker reset service client
   reset_tracker_client_ = this->create_client<std_srvs::srv::Trigger>("/tracker/reset");
@@ -290,14 +307,15 @@ void RMSerialDriver::reopenPort()
 void RMSerialDriver::setParam(const rclcpp::Parameter & param)
 {
   if (!detector_param_client_->service_is_ready()) {
-    RCLCPP_WARN(get_logger(), "Service not ready, skipping parameter set");
+    RCLCPP_WARN(get_logger(), "Armor service not ready, skipping parameter set");
     return;
   }
 
   if (
     !set_param_future_.valid() ||
     set_param_future_.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
-    RCLCPP_INFO(get_logger(), "Setting detect_color to %ld...", param.as_int());
+    RCLCPP_INFO(get_logger(), "Setting armor detect_color to %ld...", param.as_int());
+
     set_param_future_ = detector_param_client_->set_parameters(
       {param}, [this, param](const ResultFuturePtr & results) {
         for (const auto & result : results.get()) {
@@ -306,8 +324,29 @@ void RMSerialDriver::setParam(const rclcpp::Parameter & param)
             return;
           }
         }
-        RCLCPP_INFO(get_logger(), "Successfully set detect_color to %ld!", param.as_int());
+        RCLCPP_INFO(get_logger(), "Successfully set armor detect_color to %ld!", param.as_int());
         initial_set_param_ = true;
+      });
+  }
+
+  if (!rune_detector_param_client_->service_is_ready()) {
+    RCLCPP_WARN(get_logger(), "Rune service not ready, skipping parameter set");
+    return;
+  }
+
+  if (
+    !set_rune_detector_param_future_.valid() ||
+    set_rune_detector_param_future_.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+    RCLCPP_INFO(get_logger(), "Setting rune detect_color to %ld...", param.as_int());
+    set_rune_detector_param_future_ = rune_detector_param_client_->set_parameters(
+      {param}, [this, param](const ResultFuturePtr & results) {
+        for (const auto & result : results.get()) {
+          if (!result.successful) {
+            RCLCPP_ERROR(get_logger(), "Failed to set parameter: %s", result.reason.c_str());
+            return;
+          }
+        }
+        RCLCPP_INFO(get_logger(), "Successfully set rune detect_color to %ld!", 1-param.as_int());
       });
   }
 }

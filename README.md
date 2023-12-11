@@ -4,25 +4,6 @@
 
 日前迁移了rm_vision进入系统，实现了装甲板瞄准功能，现在正在开发能量机关识别以及矿物拾取和兑换识别。
 
-<details>
-  <summary>模块划分</summary>
-  &nbsp;
-目前初步将整体系统划分为以下几个模块，各模块分别成为一个节点，通过ROS2节点进行通信：
-
-- [x] 单目相机模块
-- [ ] 全景相机模块
-- [x] 串口通信模块
-- [x] 装甲板识别模块
-- [ ] 能量机关识别模块
-- [ ] 弹丸识别模块
-- [ ] 矿石识别模块
-- [ ] 兑换站识别模块
-- [ ] 自车状态模块（整合到串口模块中）
-- [ ] 目标状态估计模块
-- [ ] 车体动作指令模块
-
-</details>
-
 ## 开始使用
 
 clone 本项目后首先在根目录下打开命令行编译项目：
@@ -32,12 +13,52 @@ colcon build --symlink-install
 
 
 启动所有模块
-```shell
-sudo chmod 777 /dev/ttyACM0
+- <details>
+    <summary>rm_vision</summary>
 
-source install/setup.bash
-ros2 launch rm_vision_bringup vision_bringup.launch.py
-```
+    仅包括开源装甲板识别模块
+
+    ```shell
+    sudo chmod 777 /dev/ttyACM0
+
+    source install/setup.bash
+    ros2 launch rm_vision_bringup vision_bringup.launch.py
+    ```
+
+  </details>
+
+- 步兵
+
+  包括`装甲板识别`和`能量机关识别`模块
+
+  ```shell
+  sudo chmod 777 /dev/ttyACM0
+
+  source install/setup.bash
+  ros2 launch rm_vision_bringup infantry_bringup.launch.py
+  ```
+
+- 英雄
+
+  包括`装甲板识别`模块
+
+  ```shell
+  sudo chmod 777 /dev/ttyACM0
+
+  source install/setup.bash
+  ros2 launch rm_vision_bringup hero_bringup.launch.py
+  ```
+
+- 工程
+
+  包括`兑换站识别`和`矿石识别`模块
+
+
+- 哨兵
+
+  包括`装甲板识别`模块
+
+
 
 启动可视化
 ```shell
@@ -70,8 +91,61 @@ ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765
     ros2 launch rm_serial_driver serial_driver.launch.py
     ```
 
+- 能量机关识别模块
+    ```Shell
+    source install/setup.bash
+    ros2 launch rm_rune_detector rm_rune_detector.launch.py
+    ```
 
 </details>
+
+## 相关信息
+### 通讯协议
+- miniPC 接收的信息结构如下
+  ```C++
+  struct ReceivePacket
+  {
+    uint8_t header = 0x5A;
+    uint8_t detect_color : 1;  // 0-red 1-blue
+    bool reset_tracker : 1;
+    uint8_t reserved : 6;
+    float roll;
+    float pitch;
+    float yaw;
+    float aim_x;
+    float aim_y;
+    float aim_z;
+    uint16_t checksum = 0;
+  } __attribute__((packed));
+  ```
+
+- miniPC 发送的信息结构如下
+  ```C++
+  struct SendPacket
+  {
+    uint8_t header = 0xA5;
+    bool tracking : 1;
+    uint8_t id : 3;          // 0-outpost 6-guard 7-base
+    uint8_t armors_num : 3;  // 2-balance 3-outpost 4-normal
+    uint8_t reserved : 1;
+    float x;
+    float y;
+    float z;
+    float yaw;
+    float vx;
+    float vy;
+    float vz;
+    float v_yaw;
+    float r1;
+    float r2;
+    float dz;
+    uint16_t checksum = 0;
+  } __attribute__((packed));
+  ```
+
+### 颜色定义
+- `0` - `red`
+- `1` - `blue`
 
 ## 其他文档
 rm_vision 部署文档： [部署华师视觉项目](https://flowus.cn/lihanchen/share/0d472992-f136-4e0e-856f-89328e99c684) \
