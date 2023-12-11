@@ -59,40 +59,18 @@ namespace rm_rune_detector
 
     /**
      * @brief 对输入图像进行预处理
-     * @param input 输入图像
-     * @param output 输出图像
+     * @param rgb_img 输入图像
      */
-    cv::Mat RuneDetector::PreprocessImage(const cv::Mat &input)
+    cv::Mat RuneDetector::PreprocessImage(const cv::Mat &rgb_img)
     {
         // TODO:完成图像预处理，将返回图像部分放至参数部分
+        cv::Mat gray_img;
+        cv::cvtColor(rgb_img, gray_img, cv::COLOR_RGB2GRAY);
 
-        // 将输入图像从 BGR 色域转换到 HSV 色域
-        cv::Mat hsv_image;
-        cv::cvtColor(input, hsv_image, cv::COLOR_BGR2HSV);
+        cv::Mat binary_img;
+        cv::threshold(gray_img, binary_img, binary_thres, 255, cv::THRESH_BINARY);
 
-        // 提取图像中的对应颜色区域
-        cv::Mat mask;
-        if (detect_color == RED)
-        {
-            cv::inRange(hsv_image, cv::Scalar(hsv.red_min.H, hsv.red_min.S, hsv.red_min.V), cv::Scalar(hsv.red_max.H, hsv.red_max.S, hsv.red_max.V), mask);
-        }
-        else if (detect_color == BLUE)
-        {
-            cv::inRange(hsv_image, cv::Scalar(hsv.blue_min.H, hsv.blue_min.S, hsv.blue_min.V), cv::Scalar(hsv.blue_max.H, hsv.blue_max.S, hsv.blue_max.V), mask);
-        }
-        else
-        {
-            cv::inRange(hsv_image, cv::Scalar(hsv.red_min.H, hsv.red_min.S, hsv.red_min.V), cv::Scalar(hsv.red_max.H, hsv.red_max.S, hsv.red_max.V), mask);
-        }
-
-        // 对mask进行图形学操作
-        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
-
-        // 对 mask 进行开运算
-        cv::Mat opened_mask;
-        cv::morphologyEx(mask, opened_mask, cv::MORPH_OPEN, kernel, cv::Point(-1, -1), 2);
-
-        return opened_mask;
+        return binary_img;
     }
 
     /**

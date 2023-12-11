@@ -60,7 +60,7 @@ namespace rm_rune_detector
 
 
     private:
-        cv::Mat PreprocessImage(const cv::Mat &input);
+        cv::Mat PreprocessImage(const cv::Mat &rgb_img);
         std::vector<Ellipse> FindPossibleTargets(const cv::Mat &rbg_img, const cv::Mat &binary_img);
         std::vector<Target> FilterTargets(const std::vector<Ellipse> &possible_targets);
 

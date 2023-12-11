@@ -126,7 +126,7 @@ namespace rm_rune_detector
     {
         // RCLCPP_INFO(this->get_logger(), "Detecting rune, Debug = %d", debug_);
         // RCLCPP_INFO(this->get_logger(), "Detecting rune, detet color = %s", detector_->detect_color ? "blue" : "red");
-        RCLCPP_INFO(this->get_logger(), "Detecting rune, detet color = %d", detector_->detect_color);
+        // RCLCPP_INFO(this->get_logger(), "Detecting rune, detet color = %d", detector_->detect_color);
         // RCLCPP_INFO(this->get_logger(), "Detecting rune...");
 
         // Convert ROS img to cv::Mat
