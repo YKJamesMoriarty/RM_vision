@@ -5,7 +5,7 @@
   * @note
   * @history
   *  Version    Date            Author          Modification
-  *  V1.0.0     2023-12-13      Penguin         1. done
+  *  V1.0.0     2023-12-11      Penguin         
   *
   @verbatim
   =================================================================================
@@ -63,7 +63,6 @@ namespace rm_rune_detector
      */
     cv::Mat RuneDetector::PreprocessImage(const cv::Mat &rgb_img)
     {
-        // TODO:完成图像预处理，将返回图像部分放至参数部分
         cv::Mat gray_img;
         cv::cvtColor(rgb_img, gray_img, cv::COLOR_RGB2GRAY);
 

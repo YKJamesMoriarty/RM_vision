@@ -1,6 +1,21 @@
-// Copyright (c) 2022 ChenJun
-// Licensed under the Apache-2.0 License.
+/**
+  ****************************(C) COPYRIGHT 2023 Polarbear*************************
+  * @file       rm_serial_driver.cpp
+  * @brief      串口通信模块
+  * @note       感谢@ChenJun创建本模块并开源，
+  *             现内容为北极熊基于开源模块进行修改并适配自己的车车后的结果。
+  * @history
+  *  Version    Date            Author          Modification
+  *  V1.0.0     2022            ChenJun         1. done
+  *  V1.0.1     2023-12-11      Penguin         1. 添加与rm_rune_dector_node模块连接的Client
+  *
+  @verbatim
+  =================================================================================
 
+  =================================================================================
+  @endverbatim
+  ****************************(C) COPYRIGHT 2023 Polarbear*************************
+  */
 #include <tf2/LinearMath/Quaternion.h>
 
 #include <rclcpp/logging.hpp>
