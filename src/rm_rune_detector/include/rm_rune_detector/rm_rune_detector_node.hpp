@@ -69,8 +69,7 @@ namespace rm_rune_detector
         std::shared_ptr<rclcpp::ParameterCallbackHandle> debug_cb_handle_;
         // rclcpp::Publisher<auto_aim_interfaces::msg::DebugLights>::SharedPtr lights_data_pub_;
         // rclcpp::Publisher<auto_aim_interfaces::msg::DebugArmors>::SharedPtr armors_data_pub_;
-        image_transport::Publisher binary_img_pub_;
-        image_transport::Publisher number_img_pub_;
+        image_transport::Publisher binary_img_for_R_pub_;
         image_transport::Publisher result_img_pub_;
     };
 } // namespace rm_rune_detector

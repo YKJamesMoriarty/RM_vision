@@ -5,7 +5,7 @@
   * @note
   * @history
   *  Version    Date            Author          Modification
-  *  V1.0.0     2023-12-11      Penguin         
+  *  V1.0.0     2023-12-11      Penguin
   *
   @verbatim
   =================================================================================
@@ -41,6 +41,7 @@ namespace rm_rune_detector
     RuneDetector::RuneDetector(const int &bin_thres, const int &color, const TargetParams &t, const HSVParams &hsv)
         : binary_thres(bin_thres), detect_color(color), t(t), hsv(hsv)
     {
+        this->binary_thres_for_R = 100;
     }
 
     /**
@@ -50,26 +51,80 @@ namespace rm_rune_detector
      */
     std::vector<Target> RuneDetector::Detect(const cv::Mat &input)
     {
+        result_img = input.clone();
         // TODO:完成能量机关靶标的检测与状态判别
-        binary_img = PreprocessImage(input);
+        binary_img_for_R = PreprocessImageForR(input);
         std::vector<Target> res_tmp;
         targets_ = res_tmp;
         return targets_;
     }
 
     /**
-     * @brief 对输入图像进行预处理
+     * @brief 对输入图像进行预处理用来寻找R标
      * @param rgb_img 输入图像
+     * @return binary_img_for_R
      */
-    cv::Mat RuneDetector::PreprocessImage(const cv::Mat &rgb_img)
+    cv::Mat RuneDetector::PreprocessImageForR(const cv::Mat &rgb_img)
     {
         cv::Mat gray_img;
         cv::cvtColor(rgb_img, gray_img, cv::COLOR_RGB2GRAY);
 
-        cv::Mat binary_img;
-        cv::threshold(gray_img, binary_img, binary_thres, 255, cv::THRESH_BINARY);
+        cv::Mat binary_img_for_R;
+        cv::threshold(gray_img, binary_img_for_R, binary_thres_for_R, 255, cv::THRESH_BINARY);
 
-        return binary_img;
+        return binary_img_for_R;
+    }
+
+    cv::Point RuneDetector::FindRSign(const cv::Mat &binary_img_for_R)
+    {
+        // 寻找轮廓
+        std::vector<std::vector<cv::Point>> contours;
+        cv::findContours(binary_img_for_R, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+        // 寻找R标
+        std::vector<Rectangle> rectangles;
+        for (size_t i = 0; i < contours.size(); i++)
+        {
+            if (cv::contourArea(contours[i]) < 100 || cv::contourArea(contours[i]) > 1000)
+                continue;
+
+            // 拟合矩形
+            cv::Rect rect = cv::boundingRect(contours[i]);
+            if (abs(static_cast<double>(rect.width) / rect.height - 1) > 0.1)
+                continue;
+
+            Rectangle rectangle(rect.x, rect.y, rect.width, rect.height);
+            rectangles.push_back(rectangle);
+        }
+        // 对筛选出来的矩形按照面积进行升序排序
+        std::sort(rectangles.begin(), rectangles.end(), [](const Rectangle &a, const Rectangle &b)
+                  { return a.w * a.h < b.w * b.h; });
+
+        cv::Point rotation_center;
+        Rectangle R_sign;
+        for (size_t i = 0; i < rectangles.size(); i++)
+        {
+            int x = rectangles[i].x;
+            int y = rectangles[i].y;
+            int w = rectangles[i].w;
+            int h = rectangles[i].h;
+            cv::Mat rectangle_frame = binary_img_for_R(cv::Rect(x, y, w, h));
+
+            // 归一化数组
+            cv::Mat normalized_rectangle_frame;
+            rectangle_frame.convertTo(normalized_rectangle_frame, CV_32F, 1.0 / 255);
+
+            double total = cv::sum(normalized_rectangle_frame)[0];
+            int total_elements = normalized_rectangle_frame.total();
+            if (total / total_elements < 0.5 || total_elements > 3000)
+                continue;
+
+            rotation_center = cv::Point(x + w / 2, y + h / 2);
+            R_sign = rectangles[i];
+            cv::rectangle(result_img, cv::Point(x, y), cv::Point(x + w, y + h), cv::Scalar(255, 255, 0), 2);
+            cv::putText(result_img, "R", cv::Point(x, y - 10), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0), 2);
+        }
+        return rotation_center;
     }
 
     /**

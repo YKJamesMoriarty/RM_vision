@@ -141,8 +141,10 @@ namespace rm_rune_detector
         std::vector<Target> targets = detector_->Detect(img);
         if (debug_)
         {
-            binary_img_pub_.publish(
-                cv_bridge::CvImage(img_msg->header, "mono8", detector_->binary_img).toImageMsg());
+            binary_img_for_R_pub_.publish(
+                cv_bridge::CvImage(img_msg->header, "mono8", detector_->binary_img_for_R).toImageMsg());
+            result_img_pub_.publish(
+                cv_bridge::CvImage(img_msg->header, "rgb8", detector_->result_img).toImageMsg());
         }
         return targets;
     }
@@ -157,8 +159,7 @@ namespace rm_rune_detector
         // armors_data_pub_ =
         //     this->create_publisher<auto_aim_interfaces::msg::DebugArmors>("/detector/debug_armors", 10);
 
-        binary_img_pub_ = image_transport::create_publisher(this, "/rune_detector/binary_img");
-        number_img_pub_ = image_transport::create_publisher(this, "/rune_detector/number_img");
+        binary_img_for_R_pub_ = image_transport::create_publisher(this, "/rune_detector/binary_img_for_R");
         result_img_pub_ = image_transport::create_publisher(this, "/rune_detector/result_img");
     }
 
@@ -167,8 +168,7 @@ namespace rm_rune_detector
         // lights_data_pub_.reset();
         // armors_data_pub_.reset();
 
-        binary_img_pub_.shutdown();
-        number_img_pub_.shutdown();
+        binary_img_for_R_pub_.shutdown();
         result_img_pub_.shutdown();
     }
 
