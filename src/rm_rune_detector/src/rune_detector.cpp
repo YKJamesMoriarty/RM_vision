@@ -52,8 +52,16 @@ namespace rm_rune_detector
     std::vector<Target> RuneDetector::Detect(const cv::Mat &input)
     {
         result_img = input.clone();
+        cv::Point center(result_img.cols / 2, result_img.rows / 2); // 获取图像的中心
+        cv::Scalar color(255, 0, 0);                                // 定义圆的颜色（BGR格式）
+        cv::circle(result_img, center, 4, color, 2);                // 绘制圆
+
         // TODO:完成能量机关靶标的检测与状态判别
         binary_img_for_R = PreprocessImageForR(input);
+
+        // cv::Point rotation_center = FindRSign(binary_img_for_R);
+        FindRSign(binary_img_for_R);
+
         std::vector<Target> res_tmp;
         targets_ = res_tmp;
         return targets_;
@@ -75,14 +83,20 @@ namespace rm_rune_detector
         return binary_img_for_R;
     }
 
+    /**
+     * @brief 寻找图中的R标
+     * @param binary_img_for_R
+     * @return 能量机关旋转中心即R标的中心点
+     */
     cv::Point RuneDetector::FindRSign(const cv::Mat &binary_img_for_R)
     {
+        bool R_sign_found = false;
         // 寻找轮廓
         std::vector<std::vector<cv::Point>> contours;
         cv::findContours(binary_img_for_R, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
-        // 寻找R标
-        std::vector<Rectangle> rectangles;
+        // 拟合图像中的轮廓为矩形
+        std::vector<cv::Rect> rectangles;
         for (size_t i = 0; i < contours.size(); i++)
         {
             if (cv::contourArea(contours[i]) < 100 || cv::contourArea(contours[i]) > 1000)
@@ -93,21 +107,22 @@ namespace rm_rune_detector
             if (abs(static_cast<double>(rect.width) / rect.height - 1) > 0.1)
                 continue;
 
-            Rectangle rectangle(rect.x, rect.y, rect.width, rect.height);
-            rectangles.push_back(rectangle);
+            rectangles.push_back(rect);
         }
         // 对筛选出来的矩形按照面积进行升序排序
-        std::sort(rectangles.begin(), rectangles.end(), [](const Rectangle &a, const Rectangle &b)
-                  { return a.w * a.h < b.w * b.h; });
+        std::sort(rectangles.begin(), rectangles.end(), [](const cv::Rect &a, const cv::Rect &b)
+                  { return a.width * a.height < b.width * b.height; });
 
-        cv::Point rotation_center;
-        Rectangle R_sign;
+        cv::Point R_sign_center;
         for (size_t i = 0; i < rectangles.size(); i++)
         {
+            if (R_sign_found)
+                break;
+
             int x = rectangles[i].x;
             int y = rectangles[i].y;
-            int w = rectangles[i].w;
-            int h = rectangles[i].h;
+            int w = rectangles[i].width;
+            int h = rectangles[i].height;
             cv::Mat rectangle_frame = binary_img_for_R(cv::Rect(x, y, w, h));
 
             // 归一化数组
@@ -119,12 +134,13 @@ namespace rm_rune_detector
             if (total / total_elements < 0.5 || total_elements > 3000)
                 continue;
 
-            rotation_center = cv::Point(x + w / 2, y + h / 2);
-            R_sign = rectangles[i];
+            R_sign_center = cv::Point(x + w / 2, y + h / 2);
             cv::rectangle(result_img, cv::Point(x, y), cv::Point(x + w, y + h), cv::Scalar(255, 255, 0), 2);
             cv::putText(result_img, "R", cv::Point(x, y - 10), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0), 2);
+
+            R_sign_found = true;
         }
-        return rotation_center;
+        return R_sign_center;
     }
 
     /**
