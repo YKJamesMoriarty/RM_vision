@@ -25,6 +25,7 @@
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <image_transport/publisher.hpp>
+#include <visualization_msgs/msg/marker_array.hpp>
 
 #include "rm_rune_detector/pnp_solver.hpp"
 #include "rm_rune_detector/rune.hpp"
@@ -46,7 +47,7 @@ namespace rm_rune_detector
         std::unique_ptr<RuneDetector> InitDetector();
 
         void CreateDebugPublishers();
-
+        void PublishMarkers();
         void DestroyDebugPublishers();
 
         bool is_detect_rune_;
@@ -61,6 +62,8 @@ namespace rm_rune_detector
         rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr cam_info_sub_;
         cv::Point2f cam_center_;
         std::shared_ptr<sensor_msgs::msg::CameraInfo> cam_info_;
+
+        // PnPSolver part;
         std::unique_ptr<PnPSolver> pnp_solver_;
 
         // Debug information
@@ -72,6 +75,16 @@ namespace rm_rune_detector
         image_transport::Publisher binary_img_for_R_pub_;
         image_transport::Publisher binary_img_for_targets_pub_;
         image_transport::Publisher result_img_pub_;
+
+        // Visualization marker publisher
+        visualization_msgs::msg::Marker R_sign_marker_;
+        visualization_msgs::msg::MarkerArray R_sign_array_;
+        rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr R_sign_pub_;
+    
+        //Rune imfomation
+        cv::Point3d R_sign_pose;//R标的位置
+        std::vector<cv::Point3d> target_pose;//靶标的位置
+
     };
 } // namespace rm_rune_detector
 

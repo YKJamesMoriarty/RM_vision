@@ -73,6 +73,21 @@ namespace rm_rune_detector
         img_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
             "/image_raw", rclcpp::SensorDataQoS(),
             std::bind(&RMRuneDetectorNode::ImageCallback, this, std::placeholders::_1));
+
+        R_sign_pub_ =
+            this->create_publisher<visualization_msgs::msg::MarkerArray>("/rune_detector/R_sign", 10);
+        // Visualization Marker Publisher
+        // See http://wiki.ros.org/rviz/DisplayTypes/Marker
+        R_sign_marker_.ns = "R_sign";
+        R_sign_marker_.action = visualization_msgs::msg::Marker::ADD;
+        R_sign_marker_.type = visualization_msgs::msg::Marker::CUBE;
+        R_sign_marker_.scale.x = 0.1;
+        R_sign_marker_.scale.z = 0.1;
+        R_sign_marker_.color.a = 1.0;
+        R_sign_marker_.color.r = 0.0;
+        R_sign_marker_.color.g = 0.5;
+        R_sign_marker_.color.b = 1.0;
+        R_sign_marker_.lifetime = rclcpp::Duration::from_seconds(0.1);
     }
 
     std::unique_ptr<RuneDetector> RMRuneDetectorNode::InitDetector()
@@ -137,7 +152,38 @@ namespace rm_rune_detector
         detector_->detect_color = 1 - get_parameter("detect_color").as_int(); // 这里使用1-是因为serial的数据中设置的是识别装甲板的颜色，也就是对方的颜色，而能量机关则是己方的颜色，所以要取反
 
         // TODO: 识别图中的能量机关靶标并得到目标列表
-        std::vector<Target> targets = detector_->Detect(img);
+        // 识别R标
+        R_Sign_Rectangle R_sign_rect = detector_->DetectRSign(img);
+
+        if (pnp_solver_ != nullptr)
+        {
+            R_sign_marker_.header = img_msg->header;
+            R_sign_array_.markers.clear();
+            R_sign_marker_.id = 0;
+
+            cv::Mat rvec, tvec;
+            bool success = pnp_solver_->SolvePnP(R_sign_rect, rvec, tvec);
+            if (success)
+            {
+                // Fill pose
+                R_sign_marker_.pose.position.x = tvec.at<double>(0);
+                R_sign_marker_.pose.position.y = tvec.at<double>(1);
+                R_sign_marker_.pose.position.z = tvec.at<double>(2);
+                // Fill the markers
+                R_sign_marker_.id++;
+                R_sign_marker_.scale.y = 0.1;
+                R_sign_array_.markers.emplace_back(R_sign_marker_);
+                RCLCPP_INFO(this->get_logger(), "PnP success");
+            }
+            else
+            {
+                RCLCPP_WARN(this->get_logger(), "PnP failed!");
+            }
+            R_sign_array_.markers.emplace_back(R_sign_marker_);
+        }
+
+        RMRuneDetectorNode::PublishMarkers();
+
         if (debug_)
         {
             binary_img_for_R_pub_.publish(
@@ -147,7 +193,17 @@ namespace rm_rune_detector
             result_img_pub_.publish(
                 cv_bridge::CvImage(img_msg->header, "rgb8", detector_->result_img).toImageMsg());
         }
+
+        std::vector<Target> targets;
         return targets;
+    }
+
+    void RMRuneDetectorNode::PublishMarkers()
+    {
+        using Marker = visualization_msgs::msg::Marker;
+        R_sign_marker_.action = Marker::ADD;
+        R_sign_array_.markers.emplace_back(R_sign_marker_);
+        R_sign_pub_->publish(R_sign_array_);
     }
 
     /**

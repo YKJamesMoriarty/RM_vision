@@ -1,4 +1,19 @@
+/**
+  ****************************(C) COPYRIGHT 2023 Polarbear*************************
+  * @file       pnp_solver.hpp
+  * @brief      能量机关检测模块PNP解算
+  * @note
+  * @history
+  *  Version    Date            Author          Modification
+  *  V1.0.0     2023-12-11      Penguin
+  *
+  @verbatim
+  =================================================================================
 
+  =================================================================================
+  @endverbatim
+  ****************************(C) COPYRIGHT 2023 Polarbear*************************
+  */
 #ifndef RUNE_DETECTOR__PNP_SOLVER_HPP_
 #define RUNE_DETECTOR__PNP_SOLVER_HPP_
 
@@ -20,7 +35,7 @@ namespace rm_rune_detector
             const std::vector<double> &distortion_coefficients);
 
         // Get 3d position
-        bool solvePnP(const R_Sign_Rectangle &R_sign_rect, cv::Mat &rvec, cv::Mat &tvec);
+        bool SolvePnP(const R_Sign_Rectangle &R_sign_rect, cv::Mat &rvec, cv::Mat &tvec);
 
     private:
         cv::Mat camera_matrix_;

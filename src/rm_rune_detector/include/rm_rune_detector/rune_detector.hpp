@@ -21,6 +21,7 @@
 #include <opencv2/core.hpp>
 
 #include "rm_rune_detector/rune.hpp"
+#include "rm_rune_detector/pnp_solver.hpp"
 
 namespace rm_rune_detector
 {
@@ -49,9 +50,11 @@ namespace rm_rune_detector
             HSV blue_max;
         };
 
-        RuneDetector(const int &bin_thres, const int &color, const TargetParams &t, const HSVParams &hsv);
+        RuneDetector(
+            const int &bin_thres, const int &color,
+            const TargetParams &t, const HSVParams &hsv);
 
-        std::vector<Target> Detect(const cv::Mat &input);
+        R_Sign_Rectangle DetectRSign(const cv::Mat &input);
 
         int binary_thres;
         int binary_thres_for_R;
@@ -62,16 +65,18 @@ namespace rm_rune_detector
         cv::Mat binary_img_for_targets;
         cv::Mat result_img;
 
+
+
     private:
         cv::Mat PreprocessImageForR(const cv::Mat &rgb_img);
-        cv::Point FindRSign(const cv::Mat &binary_img_for_R);
+        R_Sign_Rectangle FindRSign(const cv::Mat &binary_img_for_R);
         cv::Mat PreprocessImageForTargets(const cv::Mat &binary_img_for_R);
         std::vector<Ellipse> FindPossibleTargets(const cv::Mat &rbg_img, const cv::Mat &binary_img);
         std::vector<Target> FilterTargets(const std::vector<Ellipse> &possible_targets);
-        
-        cv::Point rotation_center_;
-        R_Sign_Rectangle R_sign_rect_;
-        int __rotation_radius__;//在8米距离下的大致旋转半径
+
+        // cv::Point rotation_center_;
+        // R_Sign_Rectangle R_sign_rect_;
+        int __rotation_radius__; // 在8米距离下的大致旋转半径
         TargetParams t;
         HSVParams hsv;
         std::vector<Ellipse> ellipse_;

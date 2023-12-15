@@ -28,6 +28,7 @@
 
 #include "rm_rune_detector/rune_detector.hpp"
 #include "rm_rune_detector/rune.hpp"
+#include "rm_rune_detector/pnp_solver.hpp"
 
 namespace rm_rune_detector
 {
@@ -38,19 +39,22 @@ namespace rm_rune_detector
      * @param t 靶标识别相关参数
      * @param hsv 红色和蓝色HSV颜色空间阈值
      */
-    RuneDetector::RuneDetector(const int &bin_thres, const int &color, const TargetParams &t, const HSVParams &hsv)
-        : binary_thres(bin_thres), detect_color(color), t(t), hsv(hsv)
+    RuneDetector::RuneDetector(
+        const int &bin_thres, const int &color,
+        const TargetParams &t, const HSVParams &hsv)
+        : binary_thres(bin_thres), detect_color(color),
+          t(t), hsv(hsv)
     {
         this->binary_thres_for_R = 100;
         this->__rotation_radius__ = 216;
     }
 
     /**
-     * @brief 检测函数，用于检测输入图像中的目标
+     * @brief 检测函数，用于检测输入图像中的R标
      * @param input 输入图像
      * @return 检测到的靶标列表
      */
-    std::vector<Target> RuneDetector::Detect(const cv::Mat &input)
+    R_Sign_Rectangle RuneDetector::DetectRSign(const cv::Mat &input)
     {
         result_img = input.clone();
         cv::Point center(result_img.cols / 2, result_img.rows / 2); // 获取图像的中心
@@ -60,13 +64,9 @@ namespace rm_rune_detector
         // TODO:完成能量机关靶标的检测与状态判别
         binary_img_for_R = PreprocessImageForR(input);
 
-        rotation_center_ = FindRSign(binary_img_for_R);
+        R_Sign_Rectangle R_sign_rect = FindRSign(binary_img_for_R);
 
-        binary_img_for_targets = PreprocessImageForTargets(binary_img_for_R);
-
-        std::vector<Target> res_tmp;
-        targets_ = res_tmp;
-        return targets_;
+        return R_sign_rect;
     }
 
     /**
@@ -88,9 +88,9 @@ namespace rm_rune_detector
     /**
      * @brief 寻找图中的R标
      * @param binary_img_for_R
-     * @return 能量机关旋转中心即R标的中心点
+     * @return R标的矩形参数
      */
-    cv::Point RuneDetector::FindRSign(const cv::Mat &binary_img_for_R)
+    R_Sign_Rectangle RuneDetector::FindRSign(const cv::Mat &binary_img_for_R)
     {
         bool R_sign_found = false;
         // 寻找轮廓
@@ -115,7 +115,8 @@ namespace rm_rune_detector
         std::sort(rectangles.begin(), rectangles.end(), [](const cv::Rect &a, const cv::Rect &b)
                   { return a.width * a.height < b.width * b.height; });
 
-        cv::Point R_sign_center;
+        // cv::Point R_sign_center;
+        R_Sign_Rectangle R_sign_rect;
         for (size_t i = 0; i < rectangles.size(); i++)
         {
             if (R_sign_found)
@@ -136,14 +137,14 @@ namespace rm_rune_detector
             if (total / total_elements < 0.5 || total_elements > 3000)
                 continue;
 
-            R_sign_center = cv::Point(x + w / 2, y + h / 2);
-            this->R_sign_rect_ = R_Sign_Rectangle(x,y,w,h);
+            // R_sign_center = cv::Point(x + w / 2, y + h / 2);
+            R_sign_rect = R_Sign_Rectangle(x, y, w, h);
             cv::rectangle(result_img, cv::Point(x, y), cv::Point(x + w, y + h), cv::Scalar(255, 255, 0), 2);
             cv::putText(result_img, "R", cv::Point(x, y - 10), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0), 2);
 
             R_sign_found = true;
         }
-        return R_sign_center;
+        return R_sign_rect;
     }
 
     /**
@@ -153,18 +154,18 @@ namespace rm_rune_detector
      */
     cv::Mat RuneDetector::PreprocessImageForTargets(const cv::Mat &binary_img)
     {
-        //TODO:实现自适应旋转半径
+        // TODO:实现自适应旋转半径
         cv::Mat binary_img_for_targets = binary_img.clone();
-        
-        // 将旋转半径内部部分进行填充，便于后续的靶标
-        cv::circle(binary_img_for_targets, 
-                rotation_center_, __rotation_radius__ - 60, 
-                cv::Scalar(0, 0, 0), -1);// 填充圆
 
-        cv::Mat mask = cv::Mat::zeros(binary_img.size(), binary_img.type());// 创建一个全黑的掩码
-        cv::circle(mask, 
-                rotation_center_, __rotation_radius__ + 70, 
-                cv::Scalar(255, 255, 255), -1);// 在掩码上画一个白色的圆
+        // 将旋转半径内部部分进行填充，便于后续的靶标
+        // cv::circle(binary_img_for_targets,
+        //            rotation_center_, __rotation_radius__ - 60,
+        //            cv::Scalar(0, 0, 0), -1); // 填充圆
+
+        cv::Mat mask = cv::Mat::zeros(binary_img.size(), binary_img.type()); // 创建一个全黑的掩码
+        // cv::circle(mask,
+        //            rotation_center_, __rotation_radius__ + 70,
+        //            cv::Scalar(255, 255, 255), -1); // 在掩码上画一个白色的圆
 
         // 将掩码应用到图像上
         cv::bitwise_and(binary_img_for_targets, mask, binary_img_for_targets);

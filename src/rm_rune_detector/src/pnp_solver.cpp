@@ -1,4 +1,19 @@
+/**
+  ****************************(C) COPYRIGHT 2023 Polarbear*************************
+  * @file       pnp_solver.cpp
+  * @brief      能量机关检测模块PNP解算
+  * @note
+  * @history
+  *  Version    Date            Author          Modification
+  *  V1.0.0     2023-12-11      Penguin
+  *
+  @verbatim
+  =================================================================================
 
+  =================================================================================
+  @endverbatim
+  ****************************(C) COPYRIGHT 2023 Polarbear*************************
+  */
 #include "rm_rune_detector/pnp_solver.hpp"
 
 #include <opencv2/calib3d.hpp>
@@ -23,7 +38,7 @@ namespace rm_rune_detector
         R_sign_points_.emplace_back(cv::Point3f(0, -R_sign_half_y, -R_sign_half_z));
     }
 
-    bool PnPSolver::solvePnP(const R_Sign_Rectangle &R_sign_rect, cv::Mat &rvec, cv::Mat &tvec)
+    bool PnPSolver::SolvePnP(const R_Sign_Rectangle &R_sign_rect, cv::Mat &rvec, cv::Mat &tvec)
     {
         std::vector<cv::Point2f> image_armor_points;
 
@@ -39,4 +54,4 @@ namespace rm_rune_detector
             cv::SOLVEPNP_IPPE);
     }
 
-} // namespace rm_auto_aim
+} // namespace rm_rune_detector

@@ -93,21 +93,36 @@ namespace rm_rune_detector
         TargetType type;        /* 目标的类型 */
     };
 
+    /**
+     * @brief 用来描述识别到的R标的外接框的结构体
+     */
     struct R_Sign_Rectangle
     {
         R_Sign_Rectangle() = default;
-        R_Sign_Rectangle(int rect_x, int rect_y, int rect_w, int rect_h)
+        R_Sign_Rectangle(int x, int y, int w, int h)
         {
-            left_top = cv::Point(rect_x, rect_y);
-            left_bottom = cv::Point(rect_x, rect_y + rect_h);
-            right_top = cv::Point(rect_x + rect_w, rect_y);
-            right_bottom = cv::Point(rect_x + rect_w, rect_y + rect_h);
+            left_top = cv::Point(x, y);
+            left_bottom = cv::Point(x, y + h);
+            right_top = cv::Point(x + w, y);
+            right_bottom = cv::Point(x + w, y + h);
+            center = cv::Point(x + w / 2, y + h / 2);
         }
         cv::Point left_top;
         cv::Point left_bottom;
         cv::Point right_top;
         cv::Point right_bottom;
+        cv::Point center;
     };
+
+    // struct R_Sign_Pose
+    // {
+    //     R_Sign_Pose() = default;
+    //     R_Sign_Pose(double x, double y, double z)
+    //     {
+    //         position = cv::Point3d(x, y, z);
+    //     }
+    //     cv::Point3d position;
+    // };
 } // namespace rm_rune_detector
 
 #endif // RUNE_DETECTOR__ARMOR_HPP_
