@@ -31,19 +31,6 @@ namespace rm_rune_detector
         int V;
     };
 
-    struct Rectangle
-    {
-        Rectangle() = default;
-        Rectangle(int rect_x, int rect_y, int rect_w, int rect_h)
-        {
-            x = rect_x;
-            y = rect_y;
-            w = rect_w;
-            h = rect_h;
-        }
-        int x, y, w, h;
-    };
-
     class RuneDetector
     {
     public:
@@ -83,6 +70,7 @@ namespace rm_rune_detector
         std::vector<Target> FilterTargets(const std::vector<Ellipse> &possible_targets);
         
         cv::Point rotation_center_;
+        R_Sign_Rectangle R_sign_rect_;
         int __rotation_radius__;//在8米距离下的大致旋转半径
         TargetParams t;
         HSVParams hsv;

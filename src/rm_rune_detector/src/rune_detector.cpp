@@ -137,6 +137,7 @@ namespace rm_rune_detector
                 continue;
 
             R_sign_center = cv::Point(x + w / 2, y + h / 2);
+            this->R_sign_rect_ = R_Sign_Rectangle(x,y,w,h);
             cv::rectangle(result_img, cv::Point(x, y), cv::Point(x + w, y + h), cv::Scalar(255, 255, 0), 2);
             cv::putText(result_img, "R", cv::Point(x, y - 10), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0), 2);
 

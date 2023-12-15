@@ -12,46 +12,31 @@ namespace rm_rune_detector
           dist_coeffs_(cv::Mat(1, 5, CV_64F, const_cast<double *>(dist_coeffs.data())).clone())
     {
         // Unit: m
-        constexpr double small_half_y = SMALL_ARMOR_WIDTH / 2.0 / 1000.0;
-        constexpr double small_half_z = SMALL_ARMOR_HEIGHT / 2.0 / 1000.0;
-        constexpr double large_half_y = LARGE_ARMOR_WIDTH / 2.0 / 1000.0;
-        constexpr double large_half_z = LARGE_ARMOR_HEIGHT / 2.0 / 1000.0;
+        constexpr double R_sign_half_y = R_SIGN_WIDTH / 2.0 / 1000.0;
+        constexpr double R_sign_half_z = R_SIGN_HEIGHT / 2.0 / 1000.0;
 
         // Start from bottom left in clockwise order
         // Model coordinate: x forward, y left, z up
-        small_armor_points_.emplace_back(cv::Point3f(0, small_half_y, -small_half_z));
-        small_armor_points_.emplace_back(cv::Point3f(0, small_half_y, small_half_z));
-        small_armor_points_.emplace_back(cv::Point3f(0, -small_half_y, small_half_z));
-        small_armor_points_.emplace_back(cv::Point3f(0, -small_half_y, -small_half_z));
-
-        large_armor_points_.emplace_back(cv::Point3f(0, large_half_y, -large_half_z));
-        large_armor_points_.emplace_back(cv::Point3f(0, large_half_y, large_half_z));
-        large_armor_points_.emplace_back(cv::Point3f(0, -large_half_y, large_half_z));
-        large_armor_points_.emplace_back(cv::Point3f(0, -large_half_y, -large_half_z));
+        R_sign_points_.emplace_back(cv::Point3f(0, R_sign_half_y, -R_sign_half_z));
+        R_sign_points_.emplace_back(cv::Point3f(0, R_sign_half_y, R_sign_half_z));
+        R_sign_points_.emplace_back(cv::Point3f(0, -R_sign_half_y, R_sign_half_z));
+        R_sign_points_.emplace_back(cv::Point3f(0, -R_sign_half_y, -R_sign_half_z));
     }
 
-    // bool PnPSolver::solvePnP(const Armor &armor, cv::Mat &rvec, cv::Mat &tvec)
-    // {
-    //     std::vector<cv::Point2f> image_armor_points;
-
-    //     // Fill in image points
-    //     image_armor_points.emplace_back(armor.left_light.bottom);
-    //     image_armor_points.emplace_back(armor.left_light.top);
-    //     image_armor_points.emplace_back(armor.right_light.top);
-    //     image_armor_points.emplace_back(armor.right_light.bottom);
-
-    //     // Solve pnp
-    //     auto object_points = armor.type == TargetType::DISACTIVED ? small_armor_points_ : large_armor_points_;
-    //     return cv::solvePnP(
-    //         object_points, image_armor_points, camera_matrix_, dist_coeffs_, rvec, tvec, false,
-    //         cv::SOLVEPNP_IPPE);
-    // }
-
-    float PnPSolver::calculateDistanceToCenter(const cv::Point2f &image_point)
+    bool PnPSolver::solvePnP(const R_Sign_Rectangle &R_sign_rect, cv::Mat &rvec, cv::Mat &tvec)
     {
-        float cx = camera_matrix_.at<double>(0, 2);
-        float cy = camera_matrix_.at<double>(1, 2);
-        return cv::norm(image_point - cv::Point2f(cx, cy));
+        std::vector<cv::Point2f> image_armor_points;
+
+        // Fill in image points
+        image_armor_points.emplace_back(R_sign_rect.left_bottom);
+        image_armor_points.emplace_back(R_sign_rect.left_top);
+        image_armor_points.emplace_back(R_sign_rect.right_top);
+        image_armor_points.emplace_back(R_sign_rect.right_bottom);
+
+        // Solve pnp
+        return cv::solvePnP(
+            R_sign_points_, image_armor_points, camera_matrix_, dist_coeffs_, rvec, tvec, false,
+            cv::SOLVEPNP_IPPE);
     }
 
 } // namespace rm_auto_aim

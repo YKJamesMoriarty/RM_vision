@@ -92,6 +92,22 @@ namespace rm_rune_detector
         Ellipse target_ellipse; /* 目标的椭圆 */
         TargetType type;        /* 目标的类型 */
     };
+
+    struct R_Sign_Rectangle
+    {
+        R_Sign_Rectangle() = default;
+        R_Sign_Rectangle(int rect_x, int rect_y, int rect_w, int rect_h)
+        {
+            left_top = cv::Point(rect_x, rect_y);
+            left_bottom = cv::Point(rect_x, rect_y + rect_h);
+            right_top = cv::Point(rect_x + rect_w, rect_y);
+            right_bottom = cv::Point(rect_x + rect_w, rect_y + rect_h);
+        }
+        cv::Point left_top;
+        cv::Point left_bottom;
+        cv::Point right_top;
+        cv::Point right_bottom;
+    };
 } // namespace rm_rune_detector
 
 #endif // RUNE_DETECTOR__ARMOR_HPP_
