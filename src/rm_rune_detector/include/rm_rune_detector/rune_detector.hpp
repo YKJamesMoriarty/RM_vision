@@ -72,14 +72,18 @@ namespace rm_rune_detector
 
         // Debug msgs
         cv::Mat binary_img_for_R;
+        cv::Mat binary_img_for_targets;
         cv::Mat result_img;
 
     private:
         cv::Mat PreprocessImageForR(const cv::Mat &rgb_img);
         cv::Point FindRSign(const cv::Mat &binary_img_for_R);
+        cv::Mat PreprocessImageForTargets(const cv::Mat &binary_img_for_R);
         std::vector<Ellipse> FindPossibleTargets(const cv::Mat &rbg_img, const cv::Mat &binary_img);
         std::vector<Target> FilterTargets(const std::vector<Ellipse> &possible_targets);
-
+        
+        cv::Point rotation_center_;
+        int __rotation_radius__;//在8米距离下的大致旋转半径
         TargetParams t;
         HSVParams hsv;
         std::vector<Ellipse> ellipse_;

@@ -42,6 +42,7 @@ namespace rm_rune_detector
         : binary_thres(bin_thres), detect_color(color), t(t), hsv(hsv)
     {
         this->binary_thres_for_R = 100;
+        this->__rotation_radius__ = 216;
     }
 
     /**
@@ -59,8 +60,9 @@ namespace rm_rune_detector
         // TODO:完成能量机关靶标的检测与状态判别
         binary_img_for_R = PreprocessImageForR(input);
 
-        // cv::Point rotation_center = FindRSign(binary_img_for_R);
-        FindRSign(binary_img_for_R);
+        rotation_center_ = FindRSign(binary_img_for_R);
+
+        binary_img_for_targets = PreprocessImageForTargets(binary_img_for_R);
 
         std::vector<Target> res_tmp;
         targets_ = res_tmp;
@@ -141,6 +143,43 @@ namespace rm_rune_detector
             R_sign_found = true;
         }
         return R_sign_center;
+    }
+
+    /**
+     * @brief 基于对R标的检测结果，对图像进行进一步的预处理用来寻找能量机关靶标
+     * @param binary_img 经过部分处理的二值化图像
+     * @return binary_img_for_targets 用于识别靶标的二值化图像
+     */
+    cv::Mat RuneDetector::PreprocessImageForTargets(const cv::Mat &binary_img)
+    {
+        //TODO:实现自适应旋转半径
+        cv::Mat binary_img_for_targets = binary_img.clone();
+        
+        // 将旋转半径内部部分进行填充，便于后续的靶标
+        cv::circle(binary_img_for_targets, 
+                rotation_center_, __rotation_radius__ - 60, 
+                cv::Scalar(0, 0, 0), -1);// 填充圆
+
+        cv::Mat mask = cv::Mat::zeros(binary_img.size(), binary_img.type());// 创建一个全黑的掩码
+        cv::circle(mask, 
+                rotation_center_, __rotation_radius__ + 70, 
+                cv::Scalar(255, 255, 255), -1);// 在掩码上画一个白色的圆
+
+        // 将掩码应用到图像上
+        cv::bitwise_and(binary_img_for_targets, mask, binary_img_for_targets);
+
+        // 闭运算
+        cv::Mat kernel = cv::Mat::ones(7, 7, CV_8U);
+        cv::morphologyEx(binary_img_for_targets, binary_img_for_targets, cv::MORPH_CLOSE, kernel, cv::Point(-1, -1), 2);
+
+        // 寻找轮廓
+        // std::vector<std::vector<cv::Point>> contours;
+        // std::vector<cv::Vec4i> hierarchy;
+        // cv::findContours(binary, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+        // 显示二值图像
+        // cv::imshow("binary", binary);
+        return binary_img_for_targets;
     }
 
     /**
