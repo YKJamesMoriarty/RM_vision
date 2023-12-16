@@ -149,9 +149,9 @@ namespace rm_rune_detector
     /**
      * @brief 识别图中的能量机关靶标
      * @param rotation_center 相机光心坐标系下的旋转中心的3维坐标
-     * @param tvec
-     * @param camera_matrix
-     * @param dist_coeffs
+     * @param tvec 相机光心坐标系下的旋转中心的平移向量
+     * @param camera_matrix 相机内参矩阵
+     * @param dist_coeffs 相机畸变系数
      * @return 靶标列表
      */
     std::vector<Target> RuneDetector::DetectTargets(
@@ -218,8 +218,8 @@ namespace rm_rune_detector
         // TODO:实现自适应旋转半径
         cv::Mat binary_img_for_targets = binary_img.clone();
         // 计算内外旋转圆环半径
-        int rotation_radius_min = int(rotation_radius * 0.8);
-        int rotation_radius_max = int(rotation_radius * 1.2);
+        int rotation_radius_min = int(rotation_radius * 0.75);
+        int rotation_radius_max = int(rotation_radius * 1.25);
         // 将旋转半径内部部分进行填充，便于后续的靶标
         cv::circle(binary_img_for_targets,
                    rotation_center, rotation_radius_min,
@@ -234,7 +234,7 @@ namespace rm_rune_detector
         cv::bitwise_and(binary_img_for_targets, mask, binary_img_for_targets);
 
         // 闭运算
-        cv::Mat kernel = cv::Mat::ones(7, 7, CV_8U);
+        cv::Mat kernel = cv::Mat::ones(9, 9, CV_8U);
         cv::morphologyEx(binary_img_for_targets, binary_img_for_targets, cv::MORPH_CLOSE, kernel, cv::Point(-1, -1), 2);
 
         // 寻找轮廓
