@@ -55,9 +55,12 @@ namespace rm_rune_detector
             const TargetParams &t, const HSVParams &hsv);
 
         R_Sign_Rectangle DetectRSign(const cv::Mat &input);
+        std::vector<Target> DetectTargets(
+            const cv::Point3d &rotation_center, const cv::Mat &tvec,
+            const std::array<double, 9> &camera_matrix,
+            const std::vector<double> &dist_coeffs);
 
-        int binary_thres;
-        int binary_thres_for_R;
+        int binary_thresh;
         int detect_color;
 
         // Debug msgs
@@ -65,18 +68,16 @@ namespace rm_rune_detector
         cv::Mat binary_img_for_targets;
         cv::Mat result_img;
 
-
+        //调试时输出的数据，用于查看效果
 
     private:
         cv::Mat PreprocessImageForR(const cv::Mat &rgb_img);
         R_Sign_Rectangle FindRSign(const cv::Mat &binary_img_for_R);
-        cv::Mat PreprocessImageForTargets(const cv::Mat &binary_img_for_R);
+        cv::Mat PreprocessImageForTargets(const cv::Mat &binary_img,
+                                          const cv::Point2i &rotation_center, const int rotation_radius);
         std::vector<Ellipse> FindPossibleTargets(const cv::Mat &rbg_img, const cv::Mat &binary_img);
         std::vector<Target> FilterTargets(const std::vector<Ellipse> &possible_targets);
 
-        // cv::Point rotation_center_;
-        // R_Sign_Rectangle R_sign_rect_;
-        int __rotation_radius__; // 在8米距离下的大致旋转半径
         TargetParams t;
         HSVParams hsv;
         std::vector<Ellipse> ellipse_;

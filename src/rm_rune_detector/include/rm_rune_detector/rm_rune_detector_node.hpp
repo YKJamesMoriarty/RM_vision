@@ -81,8 +81,13 @@ namespace rm_rune_detector
         visualization_msgs::msg::MarkerArray R_sign_array_;
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr R_sign_pub_;
     
+        //R sign
+        // tracker;
+
         //Rune imfomation
-        cv::Point3d R_sign_pose;//R标的位置
+        cv::Point3d R_sign_pose_;//R标的位置
+        cv::Mat R_sign_tvec_;//R标的位置的平移向量
+        cv::Mat R_sign_rvec_;//R标的位置的旋转向量
         std::vector<cv::Point3d> target_pose;//靶标的位置
 
     };

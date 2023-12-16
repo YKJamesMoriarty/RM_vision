@@ -20,6 +20,7 @@
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/types.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/calib3d.hpp>
 
 // STD
 #include <algorithm>
@@ -42,11 +43,10 @@ namespace rm_rune_detector
     RuneDetector::RuneDetector(
         const int &bin_thres, const int &color,
         const TargetParams &t, const HSVParams &hsv)
-        : binary_thres(bin_thres), detect_color(color),
+        : binary_thresh(bin_thres), detect_color(color),
           t(t), hsv(hsv)
     {
-        this->binary_thres_for_R = 100;
-        this->__rotation_radius__ = 216;
+        this->binary_thresh = 80;
     }
 
     /**
@@ -80,7 +80,7 @@ namespace rm_rune_detector
         cv::cvtColor(rgb_img, gray_img, cv::COLOR_RGB2GRAY);
 
         cv::Mat binary_img_for_R;
-        cv::threshold(gray_img, binary_img_for_R, binary_thres_for_R, 255, cv::THRESH_BINARY);
+        cv::threshold(gray_img, binary_img_for_R, binary_thresh, 255, cv::THRESH_BINARY);
 
         return binary_img_for_R;
     }
@@ -137,7 +137,6 @@ namespace rm_rune_detector
             if (total / total_elements < 0.5 || total_elements > 3000)
                 continue;
 
-            // R_sign_center = cv::Point(x + w / 2, y + h / 2);
             R_sign_rect = R_Sign_Rectangle(x, y, w, h);
             cv::rectangle(result_img, cv::Point(x, y), cv::Point(x + w, y + h), cv::Scalar(255, 255, 0), 2);
             cv::putText(result_img, "R", cv::Point(x, y - 10), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 0), 2);
@@ -148,24 +147,88 @@ namespace rm_rune_detector
     }
 
     /**
+     * @brief 识别图中的能量机关靶标
+     * @param rotation_center 相机光心坐标系下的旋转中心的3维坐标
+     * @param tvec
+     * @param camera_matrix
+     * @param dist_coeffs
+     * @return 靶标列表
+     */
+    std::vector<Target> RuneDetector::DetectTargets(
+        const cv::Point3d &rotation_center, const cv::Mat &tvec,
+        const std::array<double, 9> &camera_matrix,
+        const std::vector<double> &dist_coeffs)
+    {
+        // 先将相机参数转换为Mat类型，用于opencv投影函数的计算
+        cv::Mat camera_matrix_mat(3, 3, CV_64F, const_cast<double *>(camera_matrix.data()));
+        cv::Mat dist_coeffs_mat(1, 5, CV_64F, const_cast<double *>(dist_coeffs.data()));
+
+        // 首先，将旋转中心和对应的旋转半径参考点投影到图像上获取在图像中的旋转半径像素个数
+        //  Unit: m
+        std::vector<cv::Point3f> object_points = {
+            cv::Point3f(rotation_center.x, rotation_center.y, rotation_center.z),
+            cv::Point3f(rotation_center.x + 1.4, rotation_center.y, rotation_center.z),
+            cv::Point3f(rotation_center.x, rotation_center.y + 1.4, rotation_center.z),
+            cv::Point3f(rotation_center.x, rotation_center.y, rotation_center.z + 1.4)};
+        cv::Vec3d rvec(0.0, 0.0, 0.0);         // 创建一个无旋转的旋转向量
+        std::vector<cv::Point2f> image_points; // 创建一个空的2D点向量，用来储存投影后的2D点
+        // 计算2D点的坐标
+        cv::projectPoints(object_points, rvec, tvec, camera_matrix_mat, dist_coeffs_mat, image_points);
+
+        // 画一下旋转圆的效果
+        cv::circle(result_img,
+                   image_points[0], 30,
+                   cv::Scalar(0, 255, 255), -1);
+        cv::circle(result_img,
+                   image_points[1], 20,
+                   cv::Scalar(255, 0, 255), -1);
+        cv::circle(result_img,
+                   image_points[2], 10,
+                   cv::Scalar(255, 0, 255), -1);
+        cv::circle(result_img,
+                   image_points[3], 10,
+                   cv::Scalar(255, 0, 255), -1);
+        // 计算旋转半径，这里选用x轴和y轴上的参考点的投影与旋转中心连线的长度的均值作为旋转半径
+        cv::Point p0 = image_points[0]; // 旋转中心在图像上的投影点
+        cv::Point px = image_points[1]; // x轴上的参考点在图像上的投影点
+        cv::Point py = image_points[2]; // y轴上的参考点在图像上的投影点
+        double r1 = cv::norm(px - p0);
+        double r2 = cv::norm(py - p0);
+        int r = int((r1 + r2) / 2);
+
+        // 进一步处理图像，用于寻找能量机关靶标
+        binary_img_for_targets = PreprocessImageForTargets(
+            binary_img_for_R,
+            image_points[0], r);
+
+        std::vector<Target> targets;
+        return targets;
+    }
+
+    /**
      * @brief 基于对R标的检测结果，对图像进行进一步的预处理用来寻找能量机关靶标
      * @param binary_img 经过部分处理的二值化图像
      * @return binary_img_for_targets 用于识别靶标的二值化图像
      */
-    cv::Mat RuneDetector::PreprocessImageForTargets(const cv::Mat &binary_img)
+    cv::Mat RuneDetector::PreprocessImageForTargets(
+        const cv::Mat &binary_img,
+        const cv::Point2i &rotation_center,
+        const int rotation_radius)
     {
         // TODO:实现自适应旋转半径
         cv::Mat binary_img_for_targets = binary_img.clone();
-
+        // 计算内外旋转圆环半径
+        int rotation_radius_min = int(rotation_radius * 0.8);
+        int rotation_radius_max = int(rotation_radius * 1.2);
         // 将旋转半径内部部分进行填充，便于后续的靶标
-        // cv::circle(binary_img_for_targets,
-        //            rotation_center_, __rotation_radius__ - 60,
-        //            cv::Scalar(0, 0, 0), -1); // 填充圆
+        cv::circle(binary_img_for_targets,
+                   rotation_center, rotation_radius_min,
+                   cv::Scalar(0, 0, 0), -1); // 填充圆
 
         cv::Mat mask = cv::Mat::zeros(binary_img.size(), binary_img.type()); // 创建一个全黑的掩码
-        // cv::circle(mask,
-        //            rotation_center_, __rotation_radius__ + 70,
-        //            cv::Scalar(255, 255, 255), -1); // 在掩码上画一个白色的圆
+        cv::circle(mask,
+                   rotation_center, rotation_radius_max,
+                   cv::Scalar(255, 255, 255), -1); // 在掩码上画一个白色的圆
 
         // 将掩码应用到图像上
         cv::bitwise_and(binary_img_for_targets, mask, binary_img_for_targets);

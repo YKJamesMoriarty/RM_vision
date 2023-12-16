@@ -148,13 +148,14 @@ namespace rm_rune_detector
         auto img = cv_bridge::toCvShare(img_msg, "rgb8")->image;
 
         // Update params
-        detector_->binary_thres = get_parameter("binary_thres").as_int();
+        // detector_->binary_thresh = get_parameter("binary_thres").as_int();
         detector_->detect_color = 1 - get_parameter("detect_color").as_int(); // 这里使用1-是因为serial的数据中设置的是识别装甲板的颜色，也就是对方的颜色，而能量机关则是己方的颜色，所以要取反
 
         // TODO: 识别图中的能量机关靶标并得到目标列表
         // 识别R标
         R_Sign_Rectangle R_sign_rect = detector_->DetectRSign(img);
 
+        // 根据R标的位置，进行PnP解算，并发布R标的位置
         if (pnp_solver_ != nullptr)
         {
             R_sign_marker_.header = img_msg->header;
@@ -165,15 +166,26 @@ namespace rm_rune_detector
             bool success = pnp_solver_->SolvePnP(R_sign_rect, rvec, tvec);
             if (success)
             {
+                R_sign_tvec_ = tvec.clone();
+                R_sign_rvec_ = rvec.clone();
                 // Fill pose
-                R_sign_marker_.pose.position.x = tvec.at<double>(0);
-                R_sign_marker_.pose.position.y = tvec.at<double>(1);
-                R_sign_marker_.pose.position.z = tvec.at<double>(2);
+                R_sign_pose_.x = R_sign_tvec_.at<double>(0); // 先简单赋值一下，后面再加入跟踪器
+                R_sign_pose_.y = R_sign_tvec_.at<double>(1);
+                R_sign_pose_.z = R_sign_tvec_.at<double>(2);
+
+                R_sign_marker_.pose.position.x = R_sign_pose_.x;
+                R_sign_marker_.pose.position.y = R_sign_pose_.y;
+                R_sign_marker_.pose.position.z = R_sign_pose_.z;
                 // Fill the markers
                 R_sign_marker_.id++;
                 R_sign_marker_.scale.y = 0.1;
                 R_sign_array_.markers.emplace_back(R_sign_marker_);
-                RCLCPP_INFO(this->get_logger(), "PnP success");
+
+                cv::Point3f point(R_sign_marker_.pose.position.x,
+                                  R_sign_marker_.pose.position.y,
+                                  R_sign_marker_.pose.position.z);
+                double distance = cv::norm(point);
+                RCLCPP_INFO(this->get_logger(), "R sign distance=%f", distance);
             }
             else
             {
@@ -181,8 +193,11 @@ namespace rm_rune_detector
             }
             R_sign_array_.markers.emplace_back(R_sign_marker_);
         }
-
         RMRuneDetectorNode::PublishMarkers();
+
+        // 识别扇叶
+        detector_->DetectTargets(R_sign_pose_, R_sign_tvec_,
+                                 cam_info_->k, cam_info_->d);
 
         if (debug_)
         {
