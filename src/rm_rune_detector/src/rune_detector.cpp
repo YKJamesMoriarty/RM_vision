@@ -175,20 +175,6 @@ namespace rm_rune_detector
         // 计算2D点的坐标
         cv::projectPoints(object_points, rvec, tvec, camera_matrix_mat, dist_coeffs_mat, image_points);
 
-        // 画一下旋转圆的效果
-        // cv::circle(result_img,
-        //            image_points[0], 30,
-        //            cv::Scalar(0, 255, 255), -1);
-        // cv::circle(result_img,
-        //            image_points[1], 20,
-        //            cv::Scalar(255, 0, 255), -1);
-        // cv::circle(result_img,
-        //            image_points[2], 10,
-        //            cv::Scalar(255, 0, 255), -1);
-        // cv::circle(result_img,
-        //            image_points[3], 10,
-        //            cv::Scalar(255, 0, 255), -1);
-
         // 计算旋转半径，这里选用x轴和y轴上的参考点的投影与旋转中心连线的长度的均值作为旋转半径
         cv::Point p0 = image_points[0]; // 旋转中心在图像上的投影点
         cv::Point px = image_points[1]; // x轴上的参考点在图像上的投影点
@@ -294,8 +280,8 @@ namespace rm_rune_detector
         // TODO:
         // 减少误判：
         // 1.如果2个target中心与旋转中心的连线的差值小于5度，则合并成一个，中心为两个target中心的平均值，长宽为两个target长宽的平均值
-        
-        //将矩形转换为靶标对象
+
+        // 将矩形转换为靶标对象
         std::vector<Target_Image> targets;
         for (auto &rect : rectangles)
         {

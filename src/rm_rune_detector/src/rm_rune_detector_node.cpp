@@ -122,6 +122,51 @@ namespace rm_rune_detector
         return rune_detector;
     }
 
+    void RMRuneDetectorNode::InitVisualizationMarkerPublishers()
+    {
+        target_0_pub_ =
+            this->create_publisher<visualization_msgs::msg::Marker>("/rune_detector/target_0", 10);
+        target_1_pub_ =
+            this->create_publisher<visualization_msgs::msg::Marker>("/rune_detector/target_1", 10);
+        target_2_pub_ =
+            this->create_publisher<visualization_msgs::msg::Marker>("/rune_detector/target_2", 10);
+        target_3_pub_ =
+            this->create_publisher<visualization_msgs::msg::Marker>("/rune_detector/target_3", 10);
+        target_4_pub_ =
+            this->create_publisher<visualization_msgs::msg::Marker>("/rune_detector/target_4", 10);
+        target_pubs_.push_back(target_0_pub_);
+        target_pubs_.push_back(target_1_pub_);
+        target_pubs_.push_back(target_2_pub_);
+        target_pubs_.push_back(target_3_pub_);
+        target_pubs_.push_back(target_4_pub_);
+
+        visualization_msgs::msg::Marker target_marker_0;
+        visualization_msgs::msg::Marker target_marker_1;
+        visualization_msgs::msg::Marker target_marker_2;
+        visualization_msgs::msg::Marker target_marker_3;
+        visualization_msgs::msg::Marker target_marker_4;
+        target_markers_.push_back(target_marker_0);
+        target_markers_.push_back(target_marker_1);
+        target_markers_.push_back(target_marker_2);
+        target_markers_.push_back(target_marker_3);
+        target_markers_.push_back(target_marker_4);
+
+        for (int i = 0; i < 5; i++)
+        {
+            target_markers_[i].ns = "target";
+            target_markers_[i].action = visualization_msgs::msg::Marker::ADD;
+            target_markers_[i].type = visualization_msgs::msg::Marker::SPHERE;
+            target_markers_[i].scale.x = 1;
+            target_markers_[i].scale.y = 1;
+            target_markers_[i].scale.z = 0.1;
+            target_markers_[i].color.a = 1.0;
+            target_markers_[i].color.r = 0.0;
+            target_markers_[i].color.g = 1.0;
+            target_markers_[i].color.b = 1.0;
+            target_markers_[i].lifetime = rclcpp::Duration::from_seconds(0.1);
+        }
+    }
+
     /**
      * @brief 处理图像，检测能量机关并预测打击位置的回调函数
      * @param img_msg

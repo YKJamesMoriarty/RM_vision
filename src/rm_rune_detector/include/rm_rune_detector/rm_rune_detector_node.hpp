@@ -46,6 +46,8 @@ namespace rm_rune_detector
 
         std::unique_ptr<RuneDetector> InitDetector();
 
+        void InitVisualizationMarkerPublishers();
+
         void CreateDebugPublishers();
         void PublishMarkers();
         void DestroyDebugPublishers();
@@ -80,6 +82,23 @@ namespace rm_rune_detector
         visualization_msgs::msg::Marker R_sign_marker_;
         visualization_msgs::msg::MarkerArray R_sign_array_;
         rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr R_sign_pub_;
+        visualization_msgs::msg::Marker target_0_marker_;
+        visualization_msgs::msg::Marker target_1_marker_;
+        visualization_msgs::msg::Marker target_2_marker_;
+        visualization_msgs::msg::Marker target_3_marker_;
+        visualization_msgs::msg::Marker target_4_marker_;
+        std::vector<visualization_msgs::msg::Marker> target_markers_;
+        // visualization_msgs::msg::MarkerArray target_0_array_;
+        // visualization_msgs::msg::MarkerArray target_1_array_;
+        // visualization_msgs::msg::MarkerArray target_2_array_;
+        // visualization_msgs::msg::MarkerArray target_3_array_;
+        // visualization_msgs::msg::MarkerArray target_4_array_;
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr target_0_pub_;
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr target_1_pub_;
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr target_2_pub_;
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr target_3_pub_;
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr target_4_pub_;
+        std::vector<rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr> target_pubs_;
     
         //R sign
         // tracker;
