@@ -68,8 +68,6 @@ namespace rm_rune_detector
         cv::Mat binary_img_for_targets;
         cv::Mat result_img;
 
-        // 调试时输出的数据，用于查看效果
-
     private:
         cv::Mat PreprocessImageForR(const cv::Mat &rgb_img);
         R_Sign_Rectangle FindRSign(const cv::Mat &binary_img_for_R);

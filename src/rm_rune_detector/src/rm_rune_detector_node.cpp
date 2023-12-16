@@ -208,7 +208,7 @@ namespace rm_rune_detector
             R_sign_marker_.id = 0;
 
             cv::Mat rvec, tvec;
-            bool success = pnp_solver_->SolvePnP(R_sign_rect, rvec, tvec);
+            bool success = pnp_solver_->SolvePnP_RSign(R_sign_rect, rvec, tvec);
             if (success)
             {
                 R_sign_tvec_ = tvec.clone();
@@ -241,9 +241,30 @@ namespace rm_rune_detector
         RMRuneDetectorNode::PublishMarkers();
 
         // 识别扇叶
-        detector_->DetectTargets(R_sign_pose_, R_sign_tvec_,
+        std::vector<Target_Image> targets;
+        targets = detector_->DetectTargets(R_sign_pose_, R_sign_tvec_,
                                  cam_info_->k, cam_info_->d);
 
+        for (size_t i = 0; i < targets.size(); i++)
+        {
+            //计算靶标中心与旋转中心连线的倾角
+            double angle = atan2(targets[i].center.y - R_sign_pose_.y, targets[i].center.x - R_sign_pose_.x);
+            double dx = rotation_radius_ * cos(angle);
+            double dy = rotation_radius_ * sin(angle);
+
+            std::cout<<dx<<" "<<dy<<std::endl;
+            
+            //填充发布信息
+            target_markers_[i].header = img_msg->header;
+            target_markers_[i].id = 0;
+            target_markers_[i].pose.position.x = R_sign_pose_.x + dx;
+            target_markers_[i].pose.position.y = R_sign_pose_.y + dy;
+            target_markers_[i].pose.position.z = R_sign_pose_.z;
+            // target_pubs_[i]->publish(target_markers_[i]);
+        }
+
+
+        // Publish debug images
         if (debug_)
         {
             binary_img_for_R_pub_.publish(
@@ -254,7 +275,6 @@ namespace rm_rune_detector
                 cv_bridge::CvImage(img_msg->header, "rgb8", detector_->result_img).toImageMsg());
         }
 
-        std::vector<Target_Image> targets;
         return targets;
     }
 

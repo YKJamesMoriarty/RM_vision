@@ -104,6 +104,7 @@ namespace rm_rune_detector
         // tracker;
 
         //Rune imfomation
+        double rotation_radius_=1.4;//unit:m 能量机关旋转半径
         cv::Point3d R_sign_pose_;//R标的位置
         cv::Mat R_sign_tvec_;//R标的位置的平移向量
         cv::Mat R_sign_rvec_;//R标的位置的旋转向量

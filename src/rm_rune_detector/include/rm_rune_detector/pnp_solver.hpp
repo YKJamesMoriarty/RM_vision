@@ -27,6 +27,13 @@
 #include "rm_rune_detector/rune.hpp"
 namespace rm_rune_detector
 {
+
+    enum SolveType
+    {
+        R_SIGN,
+        TARGET
+    };
+
     class PnPSolver
     {
     public:
@@ -35,7 +42,14 @@ namespace rm_rune_detector
             const std::vector<double> &distortion_coefficients);
 
         // Get 3d position
-        bool SolvePnP(const R_Sign_Rectangle &R_sign_rect, cv::Mat &rvec, cv::Mat &tvec);
+        bool SolvePnP_RSign(const R_Sign_Rectangle &R_sign_rect,
+                            cv::Mat &rvec,
+                            cv::Mat &tvec);
+
+        bool SolvePnP_Target(const R_Sign_Rectangle &R_sign_rect,
+                             const Target_Image &target,
+                             cv::Mat &rvec,
+                             cv::Mat &tvec);
 
     private:
         cv::Mat camera_matrix_;
