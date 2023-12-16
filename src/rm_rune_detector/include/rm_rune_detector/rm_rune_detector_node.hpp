@@ -42,7 +42,7 @@ namespace rm_rune_detector
     private:
         void ImageCallback(const sensor_msgs::msg::Image::ConstSharedPtr img_msg);
 
-        std::vector<Target> DetectRunes(const sensor_msgs::msg::Image::ConstSharedPtr &img_msg);
+        std::vector<Target_Image> DetectRunes(const sensor_msgs::msg::Image::ConstSharedPtr &img_msg);
 
         std::unique_ptr<RuneDetector> InitDetector();
 

@@ -137,7 +137,7 @@ namespace rm_rune_detector
      * @param img_msg
      * @return 所有靶标的数组
      */
-    std::vector<Target> RMRuneDetectorNode::DetectRunes(const sensor_msgs::msg::Image::ConstSharedPtr &img_msg)
+    std::vector<Target_Image> RMRuneDetectorNode::DetectRunes(const sensor_msgs::msg::Image::ConstSharedPtr &img_msg)
     {
         // RCLCPP_INFO(this->get_logger(), "Detecting rune, Debug = %d", debug_);
         // RCLCPP_INFO(this->get_logger(), "Detecting rune, detet color = %s", detector_->detect_color ? "blue" : "red");
@@ -209,7 +209,7 @@ namespace rm_rune_detector
                 cv_bridge::CvImage(img_msg->header, "rgb8", detector_->result_img).toImageMsg());
         }
 
-        std::vector<Target> targets;
+        std::vector<Target_Image> targets;
         return targets;
     }
 

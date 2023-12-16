@@ -154,7 +154,7 @@ namespace rm_rune_detector
      * @param dist_coeffs 相机畸变系数
      * @return 靶标列表
      */
-    std::vector<Target> RuneDetector::DetectTargets(
+    std::vector<Target_Image> RuneDetector::DetectTargets(
         const cv::Point3d &rotation_center, const cv::Mat &tvec,
         const std::array<double, 9> &camera_matrix,
         const std::vector<double> &dist_coeffs)
@@ -176,18 +176,19 @@ namespace rm_rune_detector
         cv::projectPoints(object_points, rvec, tvec, camera_matrix_mat, dist_coeffs_mat, image_points);
 
         // 画一下旋转圆的效果
-        cv::circle(result_img,
-                   image_points[0], 30,
-                   cv::Scalar(0, 255, 255), -1);
-        cv::circle(result_img,
-                   image_points[1], 20,
-                   cv::Scalar(255, 0, 255), -1);
-        cv::circle(result_img,
-                   image_points[2], 10,
-                   cv::Scalar(255, 0, 255), -1);
-        cv::circle(result_img,
-                   image_points[3], 10,
-                   cv::Scalar(255, 0, 255), -1);
+        // cv::circle(result_img,
+        //            image_points[0], 30,
+        //            cv::Scalar(0, 255, 255), -1);
+        // cv::circle(result_img,
+        //            image_points[1], 20,
+        //            cv::Scalar(255, 0, 255), -1);
+        // cv::circle(result_img,
+        //            image_points[2], 10,
+        //            cv::Scalar(255, 0, 255), -1);
+        // cv::circle(result_img,
+        //            image_points[3], 10,
+        //            cv::Scalar(255, 0, 255), -1);
+
         // 计算旋转半径，这里选用x轴和y轴上的参考点的投影与旋转中心连线的长度的均值作为旋转半径
         cv::Point p0 = image_points[0]; // 旋转中心在图像上的投影点
         cv::Point px = image_points[1]; // x轴上的参考点在图像上的投影点
@@ -201,7 +202,10 @@ namespace rm_rune_detector
             binary_img_for_R,
             image_points[0], r);
 
-        std::vector<Target> targets;
+        // 使用进一步处理过的二值化图像寻找靶标
+        std::vector<Target_Image> targets;
+        targets = RuneDetector::FindTargets(result_img, binary_img_for_targets);
+
         return targets;
     }
 
@@ -215,7 +219,6 @@ namespace rm_rune_detector
         const cv::Point2i &rotation_center,
         const int rotation_radius)
     {
-        // TODO:实现自适应旋转半径
         cv::Mat binary_img_for_targets = binary_img.clone();
         // 计算内外旋转圆环半径
         int rotation_radius_min = int(rotation_radius * 0.75);
@@ -237,13 +240,6 @@ namespace rm_rune_detector
         cv::Mat kernel = cv::Mat::ones(9, 9, CV_8U);
         cv::morphologyEx(binary_img_for_targets, binary_img_for_targets, cv::MORPH_CLOSE, kernel, cv::Point(-1, -1), 2);
 
-        // 寻找轮廓
-        // std::vector<std::vector<cv::Point>> contours;
-        // std::vector<cv::Vec4i> hierarchy;
-        // cv::findContours(binary, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-
-        // 显示二值图像
-        // cv::imshow("binary", binary);
         return binary_img_for_targets;
     }
 
@@ -253,13 +249,60 @@ namespace rm_rune_detector
      * @param binary_img 二值化图像
      * @return 可能的靶标列表
      */
-    std::vector<Ellipse> RuneDetector::FindPossibleTargets(const cv::Mat &rbg_img, const cv::Mat &binary_img)
+    std::vector<Target_Image> RuneDetector::FindTargets(const cv::Mat &rbg_img, const cv::Mat &binary_img)
     {
-        using std::vector;
-        vector<vector<cv::Point>> contours;
-        vector<cv::Vec4i> hierarchy;
+        // 获取图像中的外层轮廓
+        std::vector<std::vector<cv::Point>> contours;
+        std::vector<cv::Vec4i> hierarchy;
         cv::findContours(binary_img, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
-        return vector<Ellipse>();
+        // 遍历轮廓判断是否为靶标
+        std::vector<cv::RotatedRect> rectangles;
+        for (const auto &contour : contours)
+        {
+            if (cv::contourArea(contour) < 10)
+            {
+                continue;
+            }
+            // 拟合矩形
+            cv::RotatedRect rect = cv::minAreaRect(contour);
+            // 求矩形面积
+            double area = rect.size.width * rect.size.height;
+            if (area < 6000)
+            {
+                continue;
+            }
+            // 获取矩形的宽度和高度
+            // double width = std::min(rect.size.width, rect.size.height);
+            // double height = std::max(rect.size.width, rect.size.height);
+
+            rectangles.push_back(rect);
+
+            // 绘制矩形
+            cv::Point2f vertices[4];
+            rect.points(vertices);
+            for (int i = 0; i < 4; i++)
+            {
+                cv::line(rbg_img, vertices[i], vertices[(i + 1) % 4], cv::Scalar(0, 255, 0), 2);
+            }
+
+            // 绘制矩形中心点
+            cv::Point2f center = rect.center;
+            cv::circle(rbg_img, center, 3, cv::Scalar(255, 255, 0), -1);
+        }
+
+        // TODO:
+        // 减少误判：
+        // 1.如果2个target中心与旋转中心的连线的差值小于5度，则合并成一个，中心为两个target中心的平均值，长宽为两个target长宽的平均值
+        
+        //将矩形转换为靶标对象
+        std::vector<Target_Image> targets;
+        for (auto &rect : rectangles)
+        {
+            Target_Image target(rect);
+            targets.push_back(target);
+        }
+
+        return targets;
     }
 } // namespace rm_rune_detector

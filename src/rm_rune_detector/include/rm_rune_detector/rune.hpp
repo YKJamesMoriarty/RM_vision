@@ -73,24 +73,18 @@ namespace rm_rune_detector
     /**
      * @brief 能量机关检测中的靶标结构体
      */
-    struct Target
+    struct Target_Image
     {
-        /**
-         * @brief 默认构造函数
-         */
-        Target() = default;
-
-        /**
-         * @brief 构造函数，根据给定的椭圆构造目标
-         * @param ellipse 给定的椭圆
-         */
-        Target(Ellipse &ellipse)
+        Target_Image() = default;
+        Target_Image(cv::RotatedRect &rect)
         {
-            target_ellipse = ellipse;
+            rectangle = rect;
+            center = rect.center;
         }
 
-        Ellipse target_ellipse; /* 目标的椭圆 */
-        TargetType type;        /* 目标的类型 */
+        cv::RotatedRect rectangle;
+        cv::Point2f center;
+        TargetType type;
     };
 
     /**
