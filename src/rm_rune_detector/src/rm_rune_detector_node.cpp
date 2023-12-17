@@ -75,19 +75,22 @@ namespace rm_rune_detector
             std::bind(&RMRuneDetectorNode::ImageCallback, this, std::placeholders::_1));
 
         R_sign_pub_ =
-            this->create_publisher<visualization_msgs::msg::MarkerArray>("/rune_detector/R_sign", 10);
+            this->create_publisher<visualization_msgs::msg::Marker>("/rune_detector/R_sign", 10);
         // Visualization Marker Publisher
         // See http://wiki.ros.org/rviz/DisplayTypes/Marker
         R_sign_marker_.ns = "R_sign";
         R_sign_marker_.action = visualization_msgs::msg::Marker::ADD;
         R_sign_marker_.type = visualization_msgs::msg::Marker::CUBE;
         R_sign_marker_.scale.x = 0.1;
+        R_sign_marker_.scale.y = 0.1;
         R_sign_marker_.scale.z = 0.1;
         R_sign_marker_.color.a = 1.0;
         R_sign_marker_.color.r = 0.0;
         R_sign_marker_.color.g = 0.5;
         R_sign_marker_.color.b = 1.0;
-        R_sign_marker_.lifetime = rclcpp::Duration::from_seconds(0.1);
+        R_sign_marker_.lifetime = rclcpp::Duration::from_seconds(0.2);
+
+        InitVisualizationMarkerPublishers();
     }
 
     std::unique_ptr<RuneDetector> RMRuneDetectorNode::InitDetector()
@@ -134,36 +137,54 @@ namespace rm_rune_detector
             this->create_publisher<visualization_msgs::msg::Marker>("/rune_detector/target_3", 10);
         target_4_pub_ =
             this->create_publisher<visualization_msgs::msg::Marker>("/rune_detector/target_4", 10);
+
+        // target_0_pub_ =
+        //     this->create_publisher<visualization_msgs::msg::MarkerArray>("/rune_detector/target_0", 10);
+        // target_1_pub_ =
+        //     this->create_publisher<visualization_msgs::msg::MarkerArray>("/rune_detector/target_1", 10);
+        // target_2_pub_ =
+        //     this->create_publisher<visualization_msgs::msg::MarkerArray>("/rune_detector/target_2", 10);
+        // target_3_pub_ =
+        //     this->create_publisher<visualization_msgs::msg::MarkerArray>("/rune_detector/target_3", 10);
+        // target_4_pub_ =
+        //     this->create_publisher<visualization_msgs::msg::MarkerArray>("/rune_detector/target_4", 10);
+
         target_pubs_.push_back(target_0_pub_);
         target_pubs_.push_back(target_1_pub_);
         target_pubs_.push_back(target_2_pub_);
         target_pubs_.push_back(target_3_pub_);
         target_pubs_.push_back(target_4_pub_);
 
-        visualization_msgs::msg::Marker target_marker_0;
-        visualization_msgs::msg::Marker target_marker_1;
-        visualization_msgs::msg::Marker target_marker_2;
-        visualization_msgs::msg::Marker target_marker_3;
-        visualization_msgs::msg::Marker target_marker_4;
-        target_markers_.push_back(target_marker_0);
-        target_markers_.push_back(target_marker_1);
-        target_markers_.push_back(target_marker_2);
-        target_markers_.push_back(target_marker_3);
-        target_markers_.push_back(target_marker_4);
+        target_markers_.push_back(target_0_marker_);
+        target_markers_.push_back(target_1_marker_);
+        target_markers_.push_back(target_2_marker_);
+        target_markers_.push_back(target_3_marker_);
+        target_markers_.push_back(target_4_marker_);
+        target_markers_[0].ns = "target0";
+        target_markers_[1].ns = "target1";
+        target_markers_[2].ns = "target2";
+        target_markers_[3].ns = "target3";
+        target_markers_[4].ns = "target4";
+
+        target_arrays_.push_back(target_0_array_);
+        target_arrays_.push_back(target_1_array_);
+        target_arrays_.push_back(target_2_array_);
+        target_arrays_.push_back(target_3_array_);
+        target_arrays_.push_back(target_4_array_);
 
         for (int i = 0; i < 5; i++)
         {
-            target_markers_[i].ns = "target";
             target_markers_[i].action = visualization_msgs::msg::Marker::ADD;
             target_markers_[i].type = visualization_msgs::msg::Marker::SPHERE;
-            target_markers_[i].scale.x = 1;
-            target_markers_[i].scale.y = 1;
-            target_markers_[i].scale.z = 0.1;
+            // target_markers_[i].type = visualization_msgs::msg::Marker::CUBE;
+            target_markers_[i].scale.x = 0.3;
+            target_markers_[i].scale.y = 0.3;
+            target_markers_[i].scale.z = 0.05;
             target_markers_[i].color.a = 1.0;
             target_markers_[i].color.r = 0.0;
             target_markers_[i].color.g = 1.0;
             target_markers_[i].color.b = 1.0;
-            target_markers_[i].lifetime = rclcpp::Duration::from_seconds(0.1);
+            target_markers_[i].lifetime = rclcpp::Duration::from_seconds(0.2);
         }
     }
 
@@ -203,9 +224,7 @@ namespace rm_rune_detector
         // 根据R标的位置，进行PnP解算，并发布R标的位置
         if (pnp_solver_ != nullptr)
         {
-            R_sign_marker_.header = img_msg->header;
-            R_sign_array_.markers.clear();
-            R_sign_marker_.id = 0;
+            // R_sign_array_.markers.clear();
 
             cv::Mat rvec, tvec;
             bool success = pnp_solver_->SolvePnP_RSign(R_sign_rect, rvec, tvec);
@@ -214,55 +233,63 @@ namespace rm_rune_detector
                 R_sign_tvec_ = tvec.clone();
                 R_sign_rvec_ = rvec.clone();
                 // Fill pose
+                R_sign_pose_img_.x = R_sign_rect.center.x;
+                R_sign_pose_img_.y = R_sign_rect.center.y;
                 R_sign_pose_.x = R_sign_tvec_.at<double>(0); // 先简单赋值一下，后面再加入跟踪器
                 R_sign_pose_.y = R_sign_tvec_.at<double>(1);
                 R_sign_pose_.z = R_sign_tvec_.at<double>(2);
-
-                R_sign_marker_.pose.position.x = R_sign_pose_.x;
-                R_sign_marker_.pose.position.y = R_sign_pose_.y;
-                R_sign_marker_.pose.position.z = R_sign_pose_.z;
-                // Fill the markers
-                R_sign_marker_.id++;
-                R_sign_marker_.scale.y = 0.1;
-                R_sign_array_.markers.emplace_back(R_sign_marker_);
 
                 cv::Point3f point(R_sign_marker_.pose.position.x,
                                   R_sign_marker_.pose.position.y,
                                   R_sign_marker_.pose.position.z);
                 double distance = cv::norm(point);
-                RCLCPP_INFO(this->get_logger(), "R sign distance=%f", distance);
+                std::cout << "R标距离" << distance << std::endl;
             }
             else
             {
                 RCLCPP_WARN(this->get_logger(), "PnP failed!");
             }
-            R_sign_array_.markers.emplace_back(R_sign_marker_);
+            // R_sign_array_.markers.emplace_back(R_sign_marker_);
         }
-        RMRuneDetectorNode::PublishMarkers();
 
-        // 识别扇叶
+        // 识别靶标
         std::vector<Target_Image> targets;
         targets = detector_->DetectTargets(R_sign_pose_, R_sign_tvec_,
-                                 cam_info_->k, cam_info_->d);
+                                           cam_info_->k, cam_info_->d);
 
-        for (size_t i = 0; i < targets.size(); i++)
+        // 发布靶标的位置
+        int iteration = targets.size() <= 5 ? targets.size() : 5;
+        for (int i = 0; i < iteration; i++)
         {
-            //计算靶标中心与旋转中心连线的倾角
-            double angle = atan2(targets[i].center.y - R_sign_pose_.y, targets[i].center.x - R_sign_pose_.x);
+            // 计算靶标中心与旋转中心连线的倾角
+            double angle = atan2(targets[i].center.y - R_sign_pose_img_.y, targets[i].center.x - R_sign_pose_img_.x);
             double dx = rotation_radius_ * cos(angle);
             double dy = rotation_radius_ * sin(angle);
 
-            std::cout<<dx<<" "<<dy<<std::endl;
-            
-            //填充发布信息
+            // std::cout << angle * 180.0 / CV_PI << " " << dx << " " << dy << std::endl;
+
+            // target_arrays_[i].markers.clear();
+            // 填充发布信息
             target_markers_[i].header = img_msg->header;
             target_markers_[i].id = 0;
             target_markers_[i].pose.position.x = R_sign_pose_.x + dx;
             target_markers_[i].pose.position.y = R_sign_pose_.y + dy;
             target_markers_[i].pose.position.z = R_sign_pose_.z;
-            // target_pubs_[i]->publish(target_markers_[i]);
+
+            // target_arrays_[i].markers.emplace_back(target_markers_[i]);
+
+            target_pubs_[i]->publish(target_markers_[i]);
         }
 
+        // Fill pose
+        R_sign_marker_.pose.position.x = R_sign_pose_.x;
+        R_sign_marker_.pose.position.y = R_sign_pose_.y;
+        R_sign_marker_.pose.position.z = R_sign_pose_.z;
+        // Fill the markers
+        R_sign_marker_.header = img_msg->header;
+        R_sign_marker_.id = 0;
+        // 发布R标的位置
+        R_sign_pub_->publish(R_sign_marker_);
 
         // Publish debug images
         if (debug_)
@@ -283,7 +310,7 @@ namespace rm_rune_detector
         using Marker = visualization_msgs::msg::Marker;
         R_sign_marker_.action = Marker::ADD;
         R_sign_array_.markers.emplace_back(R_sign_marker_);
-        R_sign_pub_->publish(R_sign_array_);
+        // R_sign_pub_->publish(R_sign_array_);
     }
 
     /**

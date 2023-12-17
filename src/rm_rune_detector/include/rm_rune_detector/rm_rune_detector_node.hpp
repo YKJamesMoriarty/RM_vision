@@ -81,24 +81,32 @@ namespace rm_rune_detector
         // Visualization marker publisher
         visualization_msgs::msg::Marker R_sign_marker_;
         visualization_msgs::msg::MarkerArray R_sign_array_;
-        rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr R_sign_pub_;
+        // rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr R_sign_pub_;
+        rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr R_sign_pub_;
         visualization_msgs::msg::Marker target_0_marker_;
         visualization_msgs::msg::Marker target_1_marker_;
         visualization_msgs::msg::Marker target_2_marker_;
         visualization_msgs::msg::Marker target_3_marker_;
         visualization_msgs::msg::Marker target_4_marker_;
         std::vector<visualization_msgs::msg::Marker> target_markers_;
-        // visualization_msgs::msg::MarkerArray target_0_array_;
-        // visualization_msgs::msg::MarkerArray target_1_array_;
-        // visualization_msgs::msg::MarkerArray target_2_array_;
-        // visualization_msgs::msg::MarkerArray target_3_array_;
-        // visualization_msgs::msg::MarkerArray target_4_array_;
+        visualization_msgs::msg::MarkerArray target_0_array_;
+        visualization_msgs::msg::MarkerArray target_1_array_;
+        visualization_msgs::msg::MarkerArray target_2_array_;
+        visualization_msgs::msg::MarkerArray target_3_array_;
+        visualization_msgs::msg::MarkerArray target_4_array_;
+        std::vector<visualization_msgs::msg::MarkerArray> target_arrays_;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr target_0_pub_;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr target_1_pub_;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr target_2_pub_;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr target_3_pub_;
         rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr target_4_pub_;
         std::vector<rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr> target_pubs_;
+        // rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr target_0_pub_;
+        // rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr target_1_pub_;
+        // rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr target_2_pub_;
+        // rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr target_3_pub_;
+        // rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr target_4_pub_;
+        // std::vector<rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr> target_pubs_;
     
         //R sign
         // tracker;
@@ -106,6 +114,7 @@ namespace rm_rune_detector
         //Rune imfomation
         double rotation_radius_=1.4;//unit:m 能量机关旋转半径
         cv::Point3d R_sign_pose_;//R标的位置
+        cv::Point2d R_sign_pose_img_;//R标的位置,图片中
         cv::Mat R_sign_tvec_;//R标的位置的平移向量
         cv::Mat R_sign_rvec_;//R标的位置的旋转向量
         std::vector<cv::Point3d> target_pose;//靶标的位置
