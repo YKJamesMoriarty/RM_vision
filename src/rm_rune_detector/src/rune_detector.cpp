@@ -154,8 +154,9 @@ namespace rm_rune_detector
      * @param dist_coeffs 相机畸变系数
      * @return 靶标列表
      */
-    std::vector<Target_Image> RuneDetector::DetectTargets(
+    std::vector<double> RuneDetector::DetectTargets(
         const cv::Point3d &rotation_center, const cv::Mat &tvec,
+        const cv::Point2d R_sign_pose_img,
         const std::array<double, 9> &camera_matrix,
         const std::vector<double> &dist_coeffs)
     {
@@ -192,7 +193,21 @@ namespace rm_rune_detector
         std::vector<Target_Image> targets;
         targets = RuneDetector::FindTargets(result_img, binary_img_for_targets);
 
-        return targets;
+        // 计算连线倾角
+        std::vector<double> angles;
+        int iteration = targets.size() <= 5 ? targets.size() : 5;
+        for (int i = 0; i < iteration; i++)
+        {
+            // 计算靶标中心与旋转中心连线的倾角
+            double angle = atan2(
+                targets[i].center.y - R_sign_pose_img.y,
+                targets[i].center.x - R_sign_pose_img.x);
+            angles.push_back(angle);
+        }
+        // 对角度值升序排序
+        std::sort(angles.begin(), angles.end());
+
+        return angles;
     }
 
     /**

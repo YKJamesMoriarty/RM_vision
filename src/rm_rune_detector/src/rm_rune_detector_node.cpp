@@ -195,7 +195,7 @@ namespace rm_rune_detector
     void RMRuneDetectorNode::ImageCallback(const sensor_msgs::msg::Image::ConstSharedPtr img_msg)
     {
         // TODO: 识别图中的能量机关靶标后发布靶标信息
-        auto targets = DetectRunes(img_msg);
+        DetectRunes(img_msg);
     }
 
     /**
@@ -203,7 +203,7 @@ namespace rm_rune_detector
      * @param img_msg
      * @return 所有靶标的数组
      */
-    std::vector<Target_Image> RMRuneDetectorNode::DetectRunes(const sensor_msgs::msg::Image::ConstSharedPtr &img_msg)
+    void RMRuneDetectorNode::DetectRunes(const sensor_msgs::msg::Image::ConstSharedPtr &img_msg)
     {
         // RCLCPP_INFO(this->get_logger(), "Detecting rune, Debug = %d", debug_);
         // RCLCPP_INFO(this->get_logger(), "Detecting rune, detet color = %s", detector_->detect_color ? "blue" : "red");
@@ -253,22 +253,20 @@ namespace rm_rune_detector
         }
 
         // 识别靶标
-        std::vector<Target_Image> targets;
-        targets = detector_->DetectTargets(R_sign_pose_, R_sign_tvec_,
-                                           cam_info_->k, cam_info_->d);
+        std::vector<double> target_angles;
+        target_angles = detector_->DetectTargets(R_sign_pose_, R_sign_tvec_,
+                                                 R_sign_pose_img_,
+                                                 cam_info_->k, cam_info_->d);
 
         // 发布靶标的位置
-        int iteration = targets.size() <= 5 ? targets.size() : 5;
+        int iteration = target_angles.size() <= 5 ? target_angles.size() : 5;
         for (int i = 0; i < iteration; i++)
         {
-            // 计算靶标中心与旋转中心连线的倾角
-            double angle = atan2(targets[i].center.y - R_sign_pose_img_.y, targets[i].center.x - R_sign_pose_img_.x);
-            double dx = rotation_radius_ * cos(angle);
-            double dy = rotation_radius_ * sin(angle);
+            double dx = rotation_radius_ * cos(target_angles[i]);
+            double dy = rotation_radius_ * sin(target_angles[i]);
 
-            // std::cout << angle * 180.0 / CV_PI << " " << dx << " " << dy << std::endl;
+            std::cout << target_angles[i] * 180.0 / CV_PI << " " << dx << " " << dy << std::endl;
 
-            // target_arrays_[i].markers.clear();
             // 填充发布信息
             target_markers_[i].header = img_msg->header;
             target_markers_[i].id = 0;
@@ -301,8 +299,6 @@ namespace rm_rune_detector
             result_img_pub_.publish(
                 cv_bridge::CvImage(img_msg->header, "rgb8", detector_->result_img).toImageMsg());
         }
-
-        return targets;
     }
 
     void RMRuneDetectorNode::PublishMarkers()

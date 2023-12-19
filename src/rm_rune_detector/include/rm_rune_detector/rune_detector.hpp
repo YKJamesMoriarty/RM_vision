@@ -55,8 +55,9 @@ namespace rm_rune_detector
             const TargetParams &t, const HSVParams &hsv);
 
         R_Sign_Rectangle DetectRSign(const cv::Mat &input);
-        std::vector<Target_Image> DetectTargets(
+        std::vector<double> DetectTargets(
             const cv::Point3d &rotation_center, const cv::Mat &tvec,
+            const cv::Point2d R_sign_pose_img,
             const std::array<double, 9> &camera_matrix,
             const std::vector<double> &dist_coeffs);
 
