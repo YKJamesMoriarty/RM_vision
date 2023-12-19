@@ -30,6 +30,8 @@
 #include "rm_rune_detector/rune.hpp"
 #include "rm_rune_detector/rm_rune_detector_node.hpp"
 #include "rm_rune_detector/rune_detector.hpp"
+#include "rm_rune_detector/pnp_solver.hpp"
+#include "rm_rune_detector/tracker.hpp"
 
 namespace rm_rune_detector
 {
@@ -44,6 +46,8 @@ namespace rm_rune_detector
         RCLCPP_INFO(this->get_logger(), "Start RMRuneDetectorNode!");
 
         detector_ = InitDetector();
+
+        tracker_ = std::make_unique<Tracker>(30.0);
 
         // Debug Publishers
         debug_ = this->declare_parameter("debug", false);
@@ -257,13 +261,26 @@ namespace rm_rune_detector
         target_angles = detector_->DetectTargets(R_sign_pose_, R_sign_tvec_,
                                                  R_sign_pose_img_,
                                                  cam_info_->k, cam_info_->d);
+        // 更新跟踪器
+        // int shoot_target_id = tracker_->Update(target_angles);
+        tracker_->Update(target_angles);
+
+        // if (shoot_target_id == -1)
+        //     return;
+
+        //！！！！272~284会造成BUG，明天解决一下！！！！！！！！
 
         // 发布靶标的位置
-        int iteration = target_angles.size() <= 5 ? target_angles.size() : 5;
-        for (int i = 0; i < iteration; i++)
+        std::vector<Target> targets = tracker_->targets_;
+        std::cout << "targets.size():" << targets.size() << std::endl;
+        for (int i = 0; i < 5; i++)
+        // int iteration = target_angles.size() <= 5 ? target_angles.size() : 5;
+        // for (int i = 0; i < iteration; i++)
         {
-            double dx = rotation_radius_ * cos(target_angles[i]);
-            double dy = rotation_radius_ * sin(target_angles[i]);
+            double dx = rotation_radius_ * cos(DegreesToRadians(targets[i].angle));
+            double dy = rotation_radius_ * sin(DegreesToRadians(targets[i].angle));
+            // double dx = rotation_radius_ * cos(target_angles[i]);
+            // double dy = rotation_radius_ * sin(target_angles[i]);
 
             std::cout << target_angles[i] * 180.0 / CV_PI << " " << dx << " " << dy << std::endl;
 
@@ -273,13 +290,29 @@ namespace rm_rune_detector
             target_markers_[i].pose.position.x = R_sign_pose_.x + dx;
             target_markers_[i].pose.position.y = R_sign_pose_.y + dy;
             target_markers_[i].pose.position.z = R_sign_pose_.z;
-
-            // target_arrays_[i].markers.emplace_back(target_markers_[i]);
+            if (targets[i].type == TargetType::ACTIVED)
+            {
+                target_markers_[i].color.r = 0.0;
+                target_markers_[i].color.g = 1.0;
+                target_markers_[i].color.b = 0.0;
+            }
+            else if (targets[i].type == TargetType::NEGATIVE)
+            {
+                target_markers_[i].color.r = 1.0;
+                target_markers_[i].color.g = 0.0;
+                target_markers_[i].color.b = 0.0;
+            }
+            else if (targets[i].type == TargetType::DISACTIVED)
+            {
+                target_markers_[i].color.r = 0.0;
+                target_markers_[i].color.g = 0.0;
+                target_markers_[i].color.b = 1.0;
+            }
 
             target_pubs_[i]->publish(target_markers_[i]);
         }
 
-        // Fill pose
+        // Fill R_sign pose
         R_sign_marker_.pose.position.x = R_sign_pose_.x;
         R_sign_marker_.pose.position.y = R_sign_pose_.y;
         R_sign_marker_.pose.position.z = R_sign_pose_.z;

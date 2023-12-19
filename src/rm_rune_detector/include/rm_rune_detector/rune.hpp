@@ -36,6 +36,7 @@ namespace rm_rune_detector
     {
         DISACTIVED, /* 未激活的目标 */
         ACTIVED,    /* 激活的目标 */
+        NEGATIVE,   /* 未亮起的靶标 */
         INVALID     /* 无效的目标 */
     };
 
@@ -88,6 +89,22 @@ namespace rm_rune_detector
     };
 
     /**
+     * @brief 能量机关检测中的靶标结构体
+     * @note 使用旋转角度描述
+     */
+    struct Target
+    {
+        Target() = default;
+        Target(double angle)
+        {
+            this->angle = angle;
+            this->type = TargetType::NEGATIVE;
+        }
+        double angle; // Unit: degree
+        TargetType type;
+    };
+
+    /**
      * @brief 用来描述识别到的R标的外接框的结构体
      */
     struct R_Sign_Rectangle
@@ -108,15 +125,12 @@ namespace rm_rune_detector
         cv::Point center;
     };
 
-    // struct R_Sign_Pose
-    // {
-    //     R_Sign_Pose() = default;
-    //     R_Sign_Pose(double x, double y, double z)
-    //     {
-    //         position = cv::Point3d(x, y, z);
-    //     }
-    //     cv::Point3d position;
-    // };
+    double DegreesToRadians(double degrees);
+
+    double RadiansToDegrees(double radians);
+
+    double MesureDegreeRange(double degree);
+
 } // namespace rm_rune_detector
 
 #endif // RUNE_DETECTOR__ARMOR_HPP_

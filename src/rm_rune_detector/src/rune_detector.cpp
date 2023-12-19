@@ -150,6 +150,7 @@ namespace rm_rune_detector
      * @brief 识别图中的能量机关靶标
      * @param rotation_center 相机光心坐标系下的旋转中心的3维坐标
      * @param tvec 相机光心坐标系下的旋转中心的平移向量
+     * @param R_sign_pose_img
      * @param camera_matrix 相机内参矩阵
      * @param dist_coeffs 相机畸变系数
      * @return 靶标列表
@@ -195,7 +196,7 @@ namespace rm_rune_detector
 
         // 计算连线倾角
         std::vector<double> angles;
-        int iteration = targets.size() <= 5 ? targets.size() : 5;
+        int iteration = targets.size();
         for (int i = 0; i < iteration; i++)
         {
             // 计算靶标中心与旋转中心连线的倾角
@@ -206,6 +207,27 @@ namespace rm_rune_detector
         }
         // 对角度值升序排序
         std::sort(angles.begin(), angles.end());
+
+        // 合并相同角度的靶标
+        iteration = angles.size();
+        for (int i = 0; i < iteration - 1; i++)
+        {
+            if (abs(angles[i + 1] - angles[i]) * 180 / CV_PI < 10)
+            {
+                angles[i] = (angles[i] + angles[i + 1]) / 2;
+                angles.erase(angles.begin() + (i + 1));
+                iteration--;
+            }
+        }
+        if (!angles.empty())
+        {
+            // 若第一个角度与最后一个角度相差很小，则认为是同一个角度
+            if (abs(angles[0] + angles[angles.size() - 1]) * 180 / CV_PI < 10)
+            {
+                angles[0] = (angles[0] + angles[angles.size() - 1]) / 2;
+                angles.pop_back();
+            }
+        }
 
         return angles;
     }
@@ -273,9 +295,6 @@ namespace rm_rune_detector
             {
                 continue;
             }
-            // 获取矩形的宽度和高度
-            // double width = std::min(rect.size.width, rect.size.height);
-            // double height = std::max(rect.size.width, rect.size.height);
 
             rectangles.push_back(rect);
 

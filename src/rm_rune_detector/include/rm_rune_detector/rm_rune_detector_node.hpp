@@ -27,9 +27,10 @@
 #include <image_transport/publisher.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 
-#include "rm_rune_detector/pnp_solver.hpp"
 #include "rm_rune_detector/rune.hpp"
 #include "rm_rune_detector/rune_detector.hpp"
+#include "rm_rune_detector/tracker.hpp"
+
 namespace rm_rune_detector
 {
     class RMRuneDetectorNode : public rclcpp::Node
@@ -56,6 +57,7 @@ namespace rm_rune_detector
 
         // Rune Detector
         std::unique_ptr<RuneDetector> detector_;
+        std::unique_ptr<Tracker> tracker_;
 
         // Image subscrpition
         rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr img_sub_;
