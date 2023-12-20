@@ -209,11 +209,6 @@ namespace rm_rune_detector
      */
     void RMRuneDetectorNode::DetectRunes(const sensor_msgs::msg::Image::ConstSharedPtr &img_msg)
     {
-        // RCLCPP_INFO(this->get_logger(), "Detecting rune, Debug = %d", debug_);
-        // RCLCPP_INFO(this->get_logger(), "Detecting rune, detet color = %s", detector_->detect_color ? "blue" : "red");
-        // RCLCPP_INFO(this->get_logger(), "Detecting rune, detet color = %d", detector_->detect_color);
-        // RCLCPP_INFO(this->get_logger(), "Detecting rune...");
-
         // Convert ROS img to cv::Mat
         auto img = cv_bridge::toCvShare(img_msg, "rgb8")->image;
 
@@ -228,8 +223,6 @@ namespace rm_rune_detector
         // 根据R标的位置，进行PnP解算，并发布R标的位置
         if (pnp_solver_ != nullptr)
         {
-            // R_sign_array_.markers.clear();
-
             cv::Mat rvec, tvec;
             bool success = pnp_solver_->SolvePnP_RSign(R_sign_rect, rvec, tvec);
             if (success)
@@ -265,24 +258,14 @@ namespace rm_rune_detector
         // int shoot_target_id = tracker_->Update(target_angles);
         tracker_->Update(target_angles);
 
-        // if (shoot_target_id == -1)
-        //     return;
-
-        //！！！！272~284会造成BUG，明天解决一下！！！！！！！！
-
         // 发布靶标的位置
         std::vector<Target> targets = tracker_->targets_;
-        std::cout << "targets.size():" << targets.size() << std::endl;
         for (int i = 0; i < 5; i++)
-        // int iteration = target_angles.size() <= 5 ? target_angles.size() : 5;
-        // for (int i = 0; i < iteration; i++)
         {
             double dx = rotation_radius_ * cos(DegreesToRadians(targets[i].angle));
             double dy = rotation_radius_ * sin(DegreesToRadians(targets[i].angle));
-            // double dx = rotation_radius_ * cos(target_angles[i]);
-            // double dy = rotation_radius_ * sin(target_angles[i]);
 
-            std::cout << target_angles[i] * 180.0 / CV_PI << " " << dx << " " << dy << std::endl;
+            std::cout << targets[i].angle << " " << dx << " " << dy << std::endl;
 
             // 填充发布信息
             target_markers_[i].header = img_msg->header;
@@ -339,7 +322,6 @@ namespace rm_rune_detector
         using Marker = visualization_msgs::msg::Marker;
         R_sign_marker_.action = Marker::ADD;
         R_sign_array_.markers.emplace_back(R_sign_marker_);
-        // R_sign_pub_->publish(R_sign_array_);
     }
 
     /**
@@ -347,11 +329,6 @@ namespace rm_rune_detector
      */
     void RMRuneDetectorNode::CreateDebugPublishers()
     {
-        // lights_data_pub_ =
-        //     this->create_publisher<auto_aim_interfaces::msg::DebugLights>("/detector/debug_lights", 10);
-        // armors_data_pub_ =
-        //     this->create_publisher<auto_aim_interfaces::msg::DebugArmors>("/detector/debug_armors", 10);
-
         binary_img_for_R_pub_ = image_transport::create_publisher(this, "/rune_detector/binary_img_for_R");
         binary_img_for_targets_pub_ = image_transport::create_publisher(this, "/rune_detector/binary_img_for_targets");
         result_img_pub_ = image_transport::create_publisher(this, "/rune_detector/result_img");
@@ -359,9 +336,6 @@ namespace rm_rune_detector
 
     void RMRuneDetectorNode::DestroyDebugPublishers()
     {
-        // lights_data_pub_.reset();
-        // armors_data_pub_.reset();
-
         binary_img_for_R_pub_.shutdown();
         result_img_pub_.shutdown();
     }
