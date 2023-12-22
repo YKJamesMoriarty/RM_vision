@@ -103,7 +103,7 @@ namespace rm_rune_detector
             }
             // 再依次匹配angles向量中的其他目标
             int p = 1;         // traget向量中的位置
-            int q = index + 1; // angles向量中的位置
+            int q = (index + 1) % angle_num; // angles向量中的位置
             bool have_new_target = false;
             while (p < 5 || q != index)
             {

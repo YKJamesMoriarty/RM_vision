@@ -203,7 +203,7 @@ namespace rm_rune_detector
             double angle = atan2(
                 targets[i].center.y - R_sign_pose_img.y,
                 targets[i].center.x - R_sign_pose_img.x);
-            angles.push_back(angle);
+            angles.push_back(RadiansToDegree(angle));
         }
         // 对角度值升序排序
         std::sort(angles.begin(), angles.end());
@@ -212,7 +212,7 @@ namespace rm_rune_detector
         iteration = angles.size();
         for (int i = 0; i < iteration - 1; i++)
         {
-            if (abs(angles[i + 1] - angles[i]) * 180 / CV_PI < 10)
+            if (abs(angles[i + 1] - angles[i])< 10)
             {
                 angles[i] = (angles[i] + angles[i + 1]) / 2;
                 angles.erase(angles.begin() + (i + 1));
@@ -222,7 +222,7 @@ namespace rm_rune_detector
         if (!angles.empty())
         {
             // 若第一个角度与最后一个角度相差很小，则认为是同一个角度
-            if (abs(angles[0] + angles[angles.size() - 1]) * 180 / CV_PI < 10)
+            if (abs(angles[0] + angles[angles.size() - 1])< 10)
             {
                 angles[0] = (angles[0] + angles[angles.size() - 1]) / 2;
                 angles.pop_back();

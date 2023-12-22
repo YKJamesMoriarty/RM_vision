@@ -12,6 +12,16 @@
 
 运行环境：Ubuntu 22.04 / ROS2 Humble (未在其他环境下测试)
 
+## 借鉴开源
+
+- [CSU-FYT 能量机关识别方案](https://gitee.com/aqs-dwr/docs_of_dworry/blob/master/%E8%83%BD%E9%87%8F%E6%9C%BA%E5%85%B3%E8%AF%86%E5%88%AB%E6%96%B9%E6%A1%88.md)
+    >
+- [CSU-FYT 能量机关预测方案](https://gitee.com/aqs-dwr/docs_of_dworry/blob/master/%E8%83%BD%E9%87%8F%E6%9C%BA%E5%85%B3%E9%A2%84%E6%B5%8B%E6%96%B9%E6%A1%88.md)
+    >
+- [RM_Buff_Tracker_GUT](https://github.com/DH13768095744/RM_Buff_Tracker_GUT)
+    > 主要参考了其通过内外圆环的方式提取出扇叶部分的内容，减少多余信息的干扰
+<!-- - []() -->
+
 ## 基本逻辑
 
 ~~~mermaid
