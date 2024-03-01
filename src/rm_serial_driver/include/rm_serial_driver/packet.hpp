@@ -10,7 +10,7 @@
 
 namespace rm_serial_driver
 {
-struct ReceivePacket
+struct ReceivePacketVision
 {
   uint8_t header = 0x5A;
   uint8_t detect_color : 1;  // 0-red 1-blue
@@ -25,7 +25,7 @@ struct ReceivePacket
   uint16_t checksum = 0;
 } __attribute__((packed));
 
-struct SendPacket
+struct SendPacketVision
 {
   uint8_t header = 0xA5;
   bool tracking : 1;
@@ -46,19 +46,49 @@ struct SendPacket
   uint16_t checksum = 0;
 } __attribute__((packed));
 
-inline ReceivePacket fromVector(const std::vector<uint8_t> & data)
+struct SendPacketTwist
 {
-  ReceivePacket packet;
+  uint8_t header = 0xA4;
+  float linear_x;
+  float linear_y;
+  float linear_z;
+  float angular_x;
+  float angular_y;
+  float angular_z;
+  uint16_t checksum = 0;
+} __attribute__((packed));
+
+// inline ReceivePacket fromVector(const std::vector<uint8_t> & data)
+// {
+//   ReceivePacket packet;
+//   std::copy(data.begin(), data.end(), reinterpret_cast<uint8_t *>(&packet));
+//   return packet;
+// }
+
+// inline std::vector<uint8_t> toVector(const SendPacket & data)
+// {
+//   std::vector<uint8_t> packet(sizeof(SendPacket));
+//   std::copy(
+//     reinterpret_cast<const uint8_t *>(&data),
+//     reinterpret_cast<const uint8_t *>(&data) + sizeof(SendPacket), packet.begin());
+//   return packet;
+// }
+
+template <typename T>
+inline T fromVector(const std::vector<uint8_t> & data)
+{
+  T packet;
   std::copy(data.begin(), data.end(), reinterpret_cast<uint8_t *>(&packet));
   return packet;
 }
 
-inline std::vector<uint8_t> toVector(const SendPacket & data)
+template <typename T>
+inline std::vector<uint8_t> toVector(const T & data)
 {
-  std::vector<uint8_t> packet(sizeof(SendPacket));
+  std::vector<uint8_t> packet(sizeof(T));
   std::copy(
-    reinterpret_cast<const uint8_t *>(&data),
-    reinterpret_cast<const uint8_t *>(&data) + sizeof(SendPacket), packet.begin());
+    reinterpret_cast<const uint8_t *>(&data), reinterpret_cast<const uint8_t *>(&data) + sizeof(T),
+    packet.begin());
   return packet;
 }
 

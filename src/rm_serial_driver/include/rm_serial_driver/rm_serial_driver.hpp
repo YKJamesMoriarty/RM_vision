@@ -8,6 +8,7 @@
   *  Version    Date            Author          Modification
   *  V1.0.0     2022            ChenJun         1. done
   *  V1.0.1     2023-12-11      Penguin         1. 添加与rm_rune_dector_node模块连接的Client
+  *  V1.0.2     2024-3-1        LihanChen       1. 添加导航数据包，并重命名packet和相关函数
   *
   @verbatim
   =================================================================================
@@ -22,7 +23,9 @@
 
 #include <tf2_ros/transform_broadcaster.h>
 
+#include <auto_aim_interfaces/msg/target.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
+#include <geometry_msgs/msg/twist.hpp>
 #include <rclcpp/publisher.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/subscription.hpp>
@@ -32,13 +35,12 @@
 #include <visualization_msgs/msg/marker.hpp>
 
 // C++ system
+
 #include <future>
 #include <memory>
 #include <string>
 #include <thread>
 #include <vector>
-
-#include "auto_aim_interfaces/msg/target.hpp"
 
 namespace rm_serial_driver
 {
@@ -52,9 +54,11 @@ public:
 private:
   void getParams();
 
-  void receiveData();
+  void receiveDataVision();
 
-  void sendData(auto_aim_interfaces::msg::Target::SharedPtr msg);
+  void sendDataVision(auto_aim_interfaces::msg::Target::SharedPtr msg);
+
+  void sendDataTwist(geometry_msgs::msg::Twist::SharedPtr msg);
 
   void reopenPort();
 
@@ -88,6 +92,7 @@ private:
   std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
   rclcpp::Subscription<auto_aim_interfaces::msg::Target>::SharedPtr target_sub_;
+  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
 
   // For debug usage
   rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr latency_pub_;

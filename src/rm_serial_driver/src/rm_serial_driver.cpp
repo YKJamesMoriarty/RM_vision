@@ -8,6 +8,7 @@
   *  Version    Date            Author          Modification
   *  V1.0.0     2022            ChenJun         1. done
   *  V1.0.1     2023-12-11      Penguin         1. 添加与rm_rune_dector_node模块连接的Client
+  *  V1.0.2     2024-3-1        LihanChen       1. 添加导航数据包，并重命名packet和相关函数
   *
   @verbatim
   =================================================================================
@@ -16,6 +17,7 @@
   @endverbatim
   ****************************(C) COPYRIGHT 2023 Polarbear*************************
   */
+
 #include <tf2/LinearMath/Quaternion.h>
 
 #include <rclcpp/logging.hpp>
@@ -67,7 +69,7 @@ RMSerialDriver::RMSerialDriver(const rclcpp::NodeOptions & options)
     serial_driver_->init_port(device_name_, *device_config_);
     if (!serial_driver_->port()->is_open()) {
       serial_driver_->port()->open();
-      receive_thread_ = std::thread(&RMSerialDriver::receiveData, this);
+      receive_thread_ = std::thread(&RMSerialDriver::receiveDataVision, this);
     }
   } catch (const std::exception & ex) {
     RCLCPP_ERROR(
@@ -89,7 +91,9 @@ RMSerialDriver::RMSerialDriver(const rclcpp::NodeOptions & options)
   // Create Subscription
   target_sub_ = this->create_subscription<auto_aim_interfaces::msg::Target>(
     "/tracker/target", rclcpp::SensorDataQoS(),
-    std::bind(&RMSerialDriver::sendData, this, std::placeholders::_1));
+    std::bind(&RMSerialDriver::sendDataVision, this, std::placeholders::_1));
+  cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
+    "/cmd_vel", 10, std::bind(&RMSerialDriver::sendDataTwist, this, std::placeholders::_1));
 }
 
 RMSerialDriver::~RMSerialDriver()
@@ -107,22 +111,22 @@ RMSerialDriver::~RMSerialDriver()
   }
 }
 
-void RMSerialDriver::receiveData()
+void RMSerialDriver::receiveDataVision()
 {
   std::vector<uint8_t> header(1);
   std::vector<uint8_t> data;
-  data.reserve(sizeof(ReceivePacket));
+  data.reserve(sizeof(ReceivePacketVision));
 
   while (rclcpp::ok()) {
     try {
       serial_driver_->port()->receive(header);
 
       if (header[0] == 0x5A) {
-        data.resize(sizeof(ReceivePacket) - 1);
+        data.resize(sizeof(ReceivePacketVision) - 1);
         serial_driver_->port()->receive(data);
 
         data.insert(data.begin(), header[0]);
-        ReceivePacket packet = fromVector(data);
+        ReceivePacketVision packet = fromVector<ReceivePacketVision>(data);
 
         bool crc_ok =
           crc16::Verify_CRC16_Check_Sum(reinterpret_cast<const uint8_t *>(&packet), sizeof(packet));
@@ -167,16 +171,16 @@ void RMSerialDriver::receiveData()
   }
 }
 
-void RMSerialDriver::sendData(const auto_aim_interfaces::msg::Target::SharedPtr msg)
+void RMSerialDriver::sendDataVision(const auto_aim_interfaces::msg::Target::SharedPtr msg)
 {
-  const static std::map<std::string, uint8_t> id_unit8_map{
+  const static std::map<std::string, uint8_t> ID_UNIT8_MAP{
     {"", 0},  {"outpost", 0}, {"1", 1}, {"1", 1},     {"2", 2},
     {"3", 3}, {"4", 4},       {"5", 5}, {"guard", 6}, {"base", 7}};
 
   try {
-    SendPacket packet;
+    SendPacketVision packet;
     packet.tracking = msg->tracking;
-    packet.id = id_unit8_map.at(msg->id);
+    packet.id = ID_UNIT8_MAP.at(msg->id);
     packet.armors_num = msg->armors_num;
     packet.x = msg->position.x;
     packet.y = msg->position.y;
@@ -199,6 +203,28 @@ void RMSerialDriver::sendData(const auto_aim_interfaces::msg::Target::SharedPtr 
     latency.data = (this->now() - msg->header.stamp).seconds() * 1000.0;
     RCLCPP_DEBUG_STREAM(get_logger(), "Total latency: " + std::to_string(latency.data) + "ms");
     latency_pub_->publish(latency);
+  } catch (const std::exception & ex) {
+    RCLCPP_ERROR(get_logger(), "Error while sending data: %s", ex.what());
+    reopenPort();
+  }
+}
+
+void RMSerialDriver::sendDataTwist(const geometry_msgs::msg::Twist::SharedPtr msg)
+{
+  try {
+    SendPacketTwist packet;
+    packet.linear_x = msg->linear.x;
+    packet.linear_y = msg->linear.y;
+    packet.linear_z = msg->linear.z;
+    packet.angular_x = msg->angular.x;
+    packet.angular_y = msg->angular.y;
+    packet.angular_z = msg->angular.z;
+    crc16::Append_CRC16_Check_Sum(reinterpret_cast<uint8_t *>(&packet), sizeof(packet));
+
+    std::vector<uint8_t> data = toVector(packet);
+
+    serial_driver_->port()->send(data);
+
   } catch (const std::exception & ex) {
     RCLCPP_ERROR(get_logger(), "Error while sending data: %s", ex.what());
     reopenPort();
@@ -329,7 +355,7 @@ void RMSerialDriver::setParam(const rclcpp::Parameter & param)
       });
   }
 
-  if (!rune_detector_param_client_->service_is_ready()) {
+    if (!rune_detector_param_client_->service_is_ready()) {
     RCLCPP_WARN(get_logger(), "Rune service not ready, skipping parameter set");
     return;
   }
