@@ -1,8 +1,8 @@
 # rm_serial_driver
 
-RoboMaster 视觉系统与电控系统的串口通讯模块
+RoboMaster 算法系统与电控系统的串口通讯模块
 
-该项目为 [rm_vision](https://github.com/chenjunnn/rm_vision) 的子模块
+该项目为 [pb_rm_vision](https://gitee.com/SMBU-POLARBEAR/PB_RM_Vision) 的子模块
 
 ## Overview
 
@@ -22,11 +22,14 @@ RoboMaster 视觉系统与电控系统的串口通讯模块
 
 | **packet**          | **header** | **information** |
 |:-------------------:|:----------:|:---------------:|
-| ReceivePacketVision | 0x5A       | 接收云台姿态用于自瞄      |
+| ReceivePacketVision | 0x5A       | 接收云台姿态用于自瞄         |
 | SendPacketVision    | 0xA5       | 输出敌方机器人状态用于电控解算 |
-| SendPacketTwist     | 0xA4       | 底盘导航控制          |
+| SendPacketTwist     | 0xA4       | 底盘导航控制                |
+| ReceivePacketAllRobotHP  | 0x5B  | 全体机器人血量信息           |
+| ReceivePacketGameStatus  | 0x5C  | 比赛阶段与时间信息           |
+| ReceivePacketRobotStatus | 0x5D  | 机器人状态相关信息           |
 
-详情请参考 [packet.hpp](include/rm_serial_driver/packet.hpp)
+详情请参考 [packet.hpp](include/rm_serial_driver/packet.hpp) 和 [rm_decision_interfaces](https://gitee.com/SMBU-POLARBEAR/rm_behavior_tree/tree/master/rm_decision_interfaces/msg)
 
 ### ReceivePacketVision
 
