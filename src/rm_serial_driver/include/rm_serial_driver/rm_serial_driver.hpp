@@ -1,6 +1,6 @@
 /**
   ****************************(C) COPYRIGHT 2023 Polarbear*************************
-  * @file       rm_serial_driver.cpp
+  * @file       rm_serial_driver.hpp/cpp
   * @brief      串口通信模块
   * @note       感谢@ChenJun创建本模块并开源，
   *             现内容为北极熊基于开源模块进行修改并适配自己的车车后的结果。
@@ -9,7 +9,7 @@
   *  V1.0.0     2022            ChenJun         1. done
   *  V1.0.1     2023-12-11      Penguin         1. 添加与rm_rune_dector_node模块连接的Client
   *  V1.0.2     2024-3-1        LihanChen       1. 添加导航数据包，并重命名packet和相关函数
-  *
+  *  V1.0.3     2024-3-4        LihanChen       1. 添加裁判系统数据包
   @verbatim
   =================================================================================
 
@@ -29,6 +29,13 @@
 #include <rclcpp/publisher.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/subscription.hpp>
+#include <rm_decision_interfaces/msg/all_robot_hp.hpp>
+#include <rm_decision_interfaces/msg/detail/all_robot_hp__struct.hpp>
+#include <rm_decision_interfaces/msg/detail/game_status__struct.hpp>
+#include <rm_decision_interfaces/msg/detail/robot_status__struct.hpp>
+#include <rm_decision_interfaces/msg/game_status.hpp>
+#include <rm_decision_interfaces/msg/robot_status.hpp>
+#include <rm_serial_driver/packet.hpp>
 #include <serial_driver/serial_driver.hpp>
 #include <std_msgs/msg/float64.hpp>
 #include <std_srvs/srv/trigger.hpp>
@@ -54,7 +61,15 @@ public:
 private:
   void getParams();
 
-  void receiveDataVision();
+  void receiveData();
+
+  void receiveDataVision(std::vector<uint8_t> header);
+
+  void receiveDataAllRobotHP(std::vector<uint8_t> header);
+
+  void receiveDataGameStatus(std::vector<uint8_t> header);
+
+  void receiveDataRobotStatus(std::vector<uint8_t> header);
 
   void sendDataVision(auto_aim_interfaces::msg::Target::SharedPtr msg);
 
@@ -93,6 +108,16 @@ private:
 
   rclcpp::Subscription<auto_aim_interfaces::msg::Target>::SharedPtr target_sub_;
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
+
+  // Transmit referee system
+  rclcpp::Publisher<rm_decision_interfaces::msg::AllRobotHP>::SharedPtr all_robot_hp_pub_;
+  rclcpp::Publisher<rm_decision_interfaces::msg::RobotStatus>::SharedPtr robot_status_pub_;
+  rclcpp::Publisher<rm_decision_interfaces::msg::GameStatus>::SharedPtr game_status_pub_;
+
+  // Receive packet (Referee system)
+  rm_decision_interfaces::msg::AllRobotHP all_robot_hp_;
+  rm_decision_interfaces::msg::RobotStatus robot_status_;
+  rm_decision_interfaces::msg::GameStatus game_status_;
 
   // For debug usage
   rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr latency_pub_;

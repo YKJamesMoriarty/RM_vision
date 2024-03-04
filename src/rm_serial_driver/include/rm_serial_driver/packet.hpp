@@ -58,21 +58,46 @@ struct SendPacketTwist
   uint16_t checksum = 0;
 } __attribute__((packed));
 
-// inline ReceivePacket fromVector(const std::vector<uint8_t> & data)
-// {
-//   ReceivePacket packet;
-//   std::copy(data.begin(), data.end(), reinterpret_cast<uint8_t *>(&packet));
-//   return packet;
-// }
+struct ReceivePacketAllRobotHP
+{
+  uint8_t header = 0x5B;
+  uint16_t red_1_robot_hp;
+  uint16_t red_2_robot_hp;
+  uint16_t red_3_robot_hp;
+  uint16_t red_4_robot_hp;
+  uint16_t red_5_robot_hp;
+  uint16_t red_7_robot_hp;
+  uint16_t red_outpost_hp;
+  uint16_t red_base_hp;
+  uint16_t blue_1_robot_hp;
+  uint16_t blue_2_robot_hp;
+  uint16_t blue_3_robot_hp;
+  uint16_t blue_4_robot_hp;
+  uint16_t blue_5_robot_hp;
+  uint16_t blue_7_robot_hp;
+  uint16_t blue_outpost_hp;
+  uint16_t blue_base_hp;
+  uint16_t checksum = 0;
+} __attribute__((packed));
 
-// inline std::vector<uint8_t> toVector(const SendPacket & data)
-// {
-//   std::vector<uint8_t> packet(sizeof(SendPacket));
-//   std::copy(
-//     reinterpret_cast<const uint8_t *>(&data),
-//     reinterpret_cast<const uint8_t *>(&data) + sizeof(SendPacket), packet.begin());
-//   return packet;
-// }
+struct ReceivePacketGameStatus
+{
+  uint8_t header = 0x5C;
+  uint8_t game_progress;
+  uint16_t stage_remain_time;
+  uint16_t checksum = 0;
+} __attribute__((packed));
+
+struct ReceivePacketRobotStatus
+{
+  uint8_t header = 0x5D;
+  uint8_t robot_id;
+  uint16_t current_hp;
+  uint16_t shooter_heat;
+  bool team_color;
+  bool is_attacked;
+  uint16_t checksum = 0;
+} __attribute__((packed));
 
 template <typename T>
 inline T fromVector(const std::vector<uint8_t> & data)
