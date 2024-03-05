@@ -47,3 +47,25 @@ RoboMaster 算法系统与电控系统的串口通讯模块
 
 - linear: 线速度，包含 x, y, z 分量，分别代表沿 x, y, z 轴的线速度。单位 m/s
 - angular: 角速度，包含 x, y, z 分量，分别代表绕 x, y, z 轴的角速度。单位 rad/s
+
+### ReceivePacketAllRobotHP
+
+从裁判系统转发的敌我双方全体机器人、前哨站、基地的血量信息：[AllRobotHP.msg](https://gitee.com/SMBU-POLARBEAR/rm_behavior_tree/blob/master/rm_decision_interfaces/msg/AllRobotHP.msg)
+
+### ReceivePacketGameStatus
+
+从裁判系统转发的比赛进行阶段与时间：[GameStatus.msg](https://gitee.com/SMBU-POLARBEAR/rm_behavior_tree/blob/master/rm_decision_interfaces/msg/GameStatus.msg)
+
+### ReceivePacketRobotStatus
+
+从裁判系统转发的本机器人（哨兵）信息：[RobotStatus.msg](https://gitee.com/SMBU-POLARBEAR/rm_behavior_tree/blob/master/rm_decision_interfaces/msg/RobotStatus.msg)
+
+  `robot_id` - 裁判系统直接转发，本机 id
+
+  `current_hp` - 裁判系统直接转发，本机实时血量
+
+  `shooter_heat` - 裁判系统直接转发，本机实时枪管热量（仅留单枪管的热量）
+
+  `team_color` - 下位机处理后的数据，我方颜色，0 - Red, 1 - Blue
+
+  `is_attacked` - 下位机处理后的数据，血量是否下降，0 - False, 1 - True
