@@ -15,7 +15,8 @@ def generate_launch_description():
         namespace='',
         output='screen',
         emulate_tty=True,
-        parameters=[config],
+        parameters=[config,
+                    {'use_sim_time': False}],
     )
 
     return LaunchDescription([rm_serial_driver_node])

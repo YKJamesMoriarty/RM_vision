@@ -166,7 +166,7 @@ void RMSerialDriver::receiveDataVision(std::vector<uint8_t> header)
       crc16::Verify_CRC16_Check_Sum(reinterpret_cast<const uint8_t *>(&packet), sizeof(packet));
     if (crc_ok) {
       if (!initial_set_param_ || packet.detect_color != previous_receive_color_) {
-        setParam(rclcpp::Parameter("detect_color", packet.detect_color));
+        // setParam(rclcpp::Parameter("detect_color", packet.detect_color));
         previous_receive_color_ = packet.detect_color;
       }
 
@@ -177,7 +177,7 @@ void RMSerialDriver::receiveDataVision(std::vector<uint8_t> header)
       geometry_msgs::msg::TransformStamped t;
       timestamp_offset_ = this->get_parameter("timestamp_offset").as_double();
       t.header.stamp = this->now() + rclcpp::Duration::from_seconds(timestamp_offset_);
-      t.header.frame_id = "odom";
+      t.header.frame_id = "base_link";
       t.child_frame_id = "gimbal_link";
       tf2::Quaternion q;
       q.setRPY(packet.roll, packet.pitch, packet.yaw);
