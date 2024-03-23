@@ -102,7 +102,7 @@ private:
   // Aimimg point receiving from serial port for visualization
   visualization_msgs::msg::Marker aiming_point_;
 
-  // Broadcast tf from odom to gimbal_link
+  // Broadcast tf from gimbal_odom to gimbal_link
   double timestamp_offset_ = 0;
   std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 

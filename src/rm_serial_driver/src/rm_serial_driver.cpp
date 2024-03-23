@@ -84,7 +84,7 @@ RMSerialDriver::RMSerialDriver(const rclcpp::NodeOptions & options)
     throw ex;
   }
 
-  aiming_point_.header.frame_id = "odom";
+  aiming_point_.header.frame_id = "gimbal_odom";
   aiming_point_.ns = "aiming_point";
   aiming_point_.type = visualization_msgs::msg::Marker::SPHERE;
   aiming_point_.action = visualization_msgs::msg::Marker::ADD;
@@ -177,7 +177,7 @@ void RMSerialDriver::receiveDataVision(std::vector<uint8_t> header)
       geometry_msgs::msg::TransformStamped t;
       timestamp_offset_ = this->get_parameter("timestamp_offset").as_double();
       t.header.stamp = this->now() + rclcpp::Duration::from_seconds(timestamp_offset_);
-      t.header.frame_id = "base_link";
+      t.header.frame_id = "gimbal_odom";
       t.child_frame_id = "gimbal_link";
       tf2::Quaternion q;
       q.setRPY(packet.roll, packet.pitch, packet.yaw);
