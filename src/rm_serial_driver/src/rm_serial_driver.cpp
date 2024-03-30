@@ -370,7 +370,7 @@ void RMSerialDriver::sendScanStatus(const std_msgs::msg::Bool::SharedPtr msg)
 {
   try {
     SendPacketScanStatus packet;
-    packet.is_gimbal_scan = msg->data;
+    packet.stop_gimbal_scan = msg->data;
 
     crc16::Append_CRC16_Check_Sum(reinterpret_cast<uint8_t *>(&packet), sizeof(packet));
     std::vector<uint8_t> data = toVector(packet);

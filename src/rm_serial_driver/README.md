@@ -45,7 +45,7 @@ RoboMaster 算法系统与电控系统的串口通讯模块
 
 ### SendPacketScanStatus
 
-- is_gimbal_scan: bool 类型，云台是否进入扫描模式
+- stop_gimbal_scan: bool 类型，云台是否停止扫描模式
 
 ### ReceivePacketVision
 
