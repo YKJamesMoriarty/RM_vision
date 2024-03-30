@@ -55,6 +55,13 @@ struct SendPacketTwist
   uint16_t checksum = 0;
 } __attribute__((packed));
 
+struct SendPacketScanStatus
+{
+  uint8_t header = 0xA3;
+  bool is_gimbal_scan;
+  uint16_t checksum = 0;
+} __attribute__((packed));
+
 struct ReceivePacketAllRobotHP
 {
   uint8_t header = 0x5B;

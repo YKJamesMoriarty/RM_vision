@@ -101,6 +101,8 @@ RMSerialDriver::RMSerialDriver(const rclcpp::NodeOptions & options)
     std::bind(&RMSerialDriver::sendDataVision, this, std::placeholders::_1));
   cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
     "/cmd_vel", 10, std::bind(&RMSerialDriver::sendDataTwist, this, std::placeholders::_1));
+  scan_status_sub_ = this->create_subscription<std_msgs::msg::Bool>(
+    "/scan_status", 10, std::bind(&RMSerialDriver::sendScanStatus, this, std::placeholders::_1));
 }
 
 RMSerialDriver::~RMSerialDriver()
@@ -166,7 +168,7 @@ void RMSerialDriver::receiveDataVision(std::vector<uint8_t> header)
       crc16::Verify_CRC16_Check_Sum(reinterpret_cast<const uint8_t *>(&packet), sizeof(packet));
     if (crc_ok) {
       if (!initial_set_param_ || packet.detect_color != previous_receive_color_) {
-        // setParam(rclcpp::Parameter("detect_color", packet.detect_color));
+        setParam(rclcpp::Parameter("detect_color", packet.detect_color));
         previous_receive_color_ = packet.detect_color;
       }
 
@@ -327,10 +329,9 @@ void RMSerialDriver::sendDataVision(const auto_aim_interfaces::msg::Target::Shar
     packet.r1 = msg->radius_1;
     packet.r2 = msg->radius_2;
     packet.dz = msg->dz;
+
     crc16::Append_CRC16_Check_Sum(reinterpret_cast<uint8_t *>(&packet), sizeof(packet));
-
     std::vector<uint8_t> data = toVector(packet);
-
     serial_driver_->port()->send(data);
 
     std_msgs::msg::Float64 latency;
@@ -353,10 +354,25 @@ void RMSerialDriver::sendDataTwist(const geometry_msgs::msg::Twist::SharedPtr ms
     packet.angular_x = msg->angular.x;
     packet.angular_y = msg->angular.y;
     packet.angular_z = msg->angular.z;
+
     crc16::Append_CRC16_Check_Sum(reinterpret_cast<uint8_t *>(&packet), sizeof(packet));
-
     std::vector<uint8_t> data = toVector(packet);
+    serial_driver_->port()->send(data);
 
+  } catch (const std::exception & ex) {
+    RCLCPP_ERROR(get_logger(), "Error while sending data: %s", ex.what());
+    reopenPort();
+  }
+}
+
+void RMSerialDriver::sendScanStatus(const std_msgs::msg::Bool::SharedPtr msg)
+{
+  try {
+    SendPacketScanStatus packet;
+    packet.is_gimbal_scan = msg->data;
+
+    crc16::Append_CRC16_Check_Sum(reinterpret_cast<uint8_t *>(&packet), sizeof(packet));
+    std::vector<uint8_t> data = toVector(packet);
     serial_driver_->port()->send(data);
 
   } catch (const std::exception & ex) {

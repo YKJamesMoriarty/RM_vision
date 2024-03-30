@@ -30,9 +30,6 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/subscription.hpp>
 #include <rm_decision_interfaces/msg/all_robot_hp.hpp>
-#include <rm_decision_interfaces/msg/detail/all_robot_hp__struct.hpp>
-#include <rm_decision_interfaces/msg/detail/game_status__struct.hpp>
-#include <rm_decision_interfaces/msg/detail/robot_status__struct.hpp>
 #include <rm_decision_interfaces/msg/game_status.hpp>
 #include <rm_decision_interfaces/msg/robot_status.hpp>
 #include <rm_serial_driver/packet.hpp>
@@ -41,8 +38,9 @@
 #include <std_srvs/srv/trigger.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 
-// C++ system
+#include "std_msgs/msg/bool.hpp"
 
+// C++ system
 #include <future>
 #include <memory>
 #include <string>
@@ -74,6 +72,8 @@ private:
   void sendDataVision(auto_aim_interfaces::msg::Target::SharedPtr msg);
 
   void sendDataTwist(geometry_msgs::msg::Twist::SharedPtr msg);
+
+  void sendScanStatus(std_msgs::msg::Bool::SharedPtr msg);
 
   void reopenPort();
 
@@ -108,6 +108,7 @@ private:
 
   rclcpp::Subscription<auto_aim_interfaces::msg::Target>::SharedPtr target_sub_;
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr scan_status_sub_;
 
   // Transmit referee system
   rclcpp::Publisher<rm_decision_interfaces::msg::AllRobotHP>::SharedPtr all_robot_hp_pub_;
