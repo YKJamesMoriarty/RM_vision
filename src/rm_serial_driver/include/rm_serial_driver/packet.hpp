@@ -59,6 +59,7 @@ struct SendPacketScanStatus
 {
   uint8_t header = 0xA3;
   bool stop_gimbal_scan;
+  float chassis_spin_vel;
   uint16_t checksum = 0;
 } __attribute__((packed));
 

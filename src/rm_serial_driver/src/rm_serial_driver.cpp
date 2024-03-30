@@ -101,9 +101,9 @@ RMSerialDriver::RMSerialDriver(const rclcpp::NodeOptions & options)
     std::bind(&RMSerialDriver::sendDataVision, this, std::placeholders::_1));
   cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
     "/cmd_vel", 10, std::bind(&RMSerialDriver::sendDataTwist, this, std::placeholders::_1));
-  stop_scan_status_sub_ = this->create_subscription<std_msgs::msg::Bool>(
-    "/stop_scan_status", 10,
-    std::bind(&RMSerialDriver::sendScanStatus, this, std::placeholders::_1));
+  robot_control_sub_ = this->create_subscription<rm_decision_interfaces::msg::RobotControl>(
+    "/robot_control", 10,
+    std::bind(&RMSerialDriver::sendRobotControl, this, std::placeholders::_1));
 }
 
 RMSerialDriver::~RMSerialDriver()
@@ -366,11 +366,13 @@ void RMSerialDriver::sendDataTwist(const geometry_msgs::msg::Twist::SharedPtr ms
   }
 }
 
-void RMSerialDriver::sendScanStatus(const std_msgs::msg::Bool::SharedPtr msg)
+void RMSerialDriver::sendRobotControl(
+  const rm_decision_interfaces::msg::RobotControl::SharedPtr msg)
 {
   try {
     SendPacketScanStatus packet;
-    packet.stop_gimbal_scan = msg->data;
+    packet.stop_gimbal_scan = msg->stop_gimbal_scan;
+    packet.chassis_spin_vel = msg->chassis_spin_vel;
 
     crc16::Append_CRC16_Check_Sum(reinterpret_cast<uint8_t *>(&packet), sizeof(packet));
     std::vector<uint8_t> data = toVector(packet);

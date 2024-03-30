@@ -4,6 +4,8 @@ RoboMaster 算法系统与电控系统的串口通讯模块
 
 该项目为 [pb_rm_vision](https://gitee.com/SMBU-POLARBEAR/PB_RM_Vision) 的子模块
 
+当前分支为**哨兵机器人分支**，主要改动为 rm_serial_driver，为适配决策树，添加了多种自定义消息的串口传输。与 [rm_behavior_tree](https://gitee.com/SMBU-POLARBEAR/rm_behavior_tree) 存在强依赖关系
+
 ## Overview
 
 本模块基于 [transport_drivers](https://github.com/ros-drivers/transport_drivers) 实现了上位机与电控部分通讯的功能
@@ -24,7 +26,7 @@ RoboMaster 算法系统与电控系统的串口通讯模块
 |:-------------------:|:----------:|:---------------:|
 | SendPacketVision    | 0xA5       | 输出敌方机器人状态用于电控解算 |
 | SendPacketTwist     | 0xA4       | 底盘导航控制                |
-| SendPacketScanStatus     | 0xA3       | 云台是否进入扫描状态                |
+| ReceivePacketGameStatus     | 0xA3       | 发送机器人控制命令   |
 | ReceivePacketVision | 0x5A       | 接收云台姿态用于自瞄         |
 | ReceivePacketAllRobotHP  | 0x5B  | 全体机器人血量信息           |
 | ReceivePacketGameStatus  | 0x5C  | 比赛阶段与时间信息           |
@@ -45,7 +47,8 @@ RoboMaster 算法系统与电控系统的串口通讯模块
 
 ### SendPacketScanStatus
 
-- stop_gimbal_scan: bool 类型，云台是否停止扫描模式
+- stop_gimbal_scan: bool 型，云台是否停止扫描模式
+- chassis_spin_vel: float 型，底盘小陀螺速度。单位 rad/s
 
 ### ReceivePacketVision
 
