@@ -22,20 +22,15 @@ RoboMaster 算法系统与电控系统的串口通讯模块
 
 | **packet**          | **header** | **information** |
 |:-------------------:|:----------:|:---------------:|
-| ReceivePacketVision | 0x5A       | 接收云台姿态用于自瞄         |
 | SendPacketVision    | 0xA5       | 输出敌方机器人状态用于电控解算 |
 | SendPacketTwist     | 0xA4       | 底盘导航控制                |
+| SendPacketScanStatus     | 0xA3       | 云台是否进入扫描状态                |
+| ReceivePacketVision | 0x5A       | 接收云台姿态用于自瞄         |
 | ReceivePacketAllRobotHP  | 0x5B  | 全体机器人血量信息           |
 | ReceivePacketGameStatus  | 0x5C  | 比赛阶段与时间信息           |
 | ReceivePacketRobotStatus | 0x5D  | 机器人状态相关信息           |
 
 详情请参考 [packet.hpp](include/rm_serial_driver/packet.hpp) 和 [rm_decision_interfaces](https://gitee.com/SMBU-POLARBEAR/rm_behavior_tree/tree/master/rm_decision_interfaces/msg)
-
-### ReceivePacketVision
-
-- 机器人的自身颜色 `robot_color` 以判断对应的识别目标颜色
-- 云台姿态 `pitch` 和 `yaw`, 单位和方向请参考 <https://www.ros.org/reps/rep-0103.html>
-- 当前云台瞄准的位置 `aim_x, aim_y, aim_z`，用于发布可视化 Marker
 
 ### SendPacketVision
 
@@ -47,6 +42,16 @@ RoboMaster 算法系统与电控系统的串口通讯模块
 
 - linear: 线速度，包含 x, y, z 分量，分别代表沿 x, y, z 轴的线速度。单位 m/s
 - angular: 角速度，包含 x, y, z 分量，分别代表绕 x, y, z 轴的角速度。单位 rad/s
+
+### SendPacketScanStatus
+
+- is_gimbal_scan: bool 类型，云台是否进入扫描模式
+
+### ReceivePacketVision
+
+- 机器人的自身颜色 `robot_color` 以判断对应的识别目标颜色
+- 云台姿态 `pitch` 和 `yaw`, 单位和方向请参考 <https://www.ros.org/reps/rep-0103.html>
+- 当前云台瞄准的位置 `aim_x, aim_y, aim_z`，用于发布可视化 Marker
 
 ### ReceivePacketAllRobotHP
 
