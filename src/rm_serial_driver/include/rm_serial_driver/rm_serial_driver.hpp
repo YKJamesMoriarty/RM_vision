@@ -108,7 +108,7 @@ private:
 
   rclcpp::Subscription<auto_aim_interfaces::msg::Target>::SharedPtr target_sub_;
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
-  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr scan_status_sub_;
+  rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr stop_scan_status_sub_;
 
   // Transmit referee system
   rclcpp::Publisher<rm_decision_interfaces::msg::AllRobotHP>::SharedPtr all_robot_hp_pub_;

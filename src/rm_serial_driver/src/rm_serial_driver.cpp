@@ -101,8 +101,9 @@ RMSerialDriver::RMSerialDriver(const rclcpp::NodeOptions & options)
     std::bind(&RMSerialDriver::sendDataVision, this, std::placeholders::_1));
   cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
     "/cmd_vel", 10, std::bind(&RMSerialDriver::sendDataTwist, this, std::placeholders::_1));
-  scan_status_sub_ = this->create_subscription<std_msgs::msg::Bool>(
-    "/scan_status", 10, std::bind(&RMSerialDriver::sendScanStatus, this, std::placeholders::_1));
+  stop_scan_status_sub_ = this->create_subscription<std_msgs::msg::Bool>(
+    "/stop_scan_status", 10,
+    std::bind(&RMSerialDriver::sendScanStatus, this, std::placeholders::_1));
 }
 
 RMSerialDriver::~RMSerialDriver()
