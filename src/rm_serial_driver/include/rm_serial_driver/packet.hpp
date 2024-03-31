@@ -55,7 +55,7 @@ struct SendPacketTwist
   uint16_t checksum = 0;
 } __attribute__((packed));
 
-struct SendPacketScanStatus
+struct SendPacketRobotControl
 {
   uint8_t header = 0xA3;
   bool stop_gimbal_scan;

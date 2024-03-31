@@ -370,7 +370,7 @@ void RMSerialDriver::sendRobotControl(
   const rm_decision_interfaces::msg::RobotControl::SharedPtr msg)
 {
   try {
-    SendPacketScanStatus packet;
+    SendPacketRobotControl packet;
     packet.stop_gimbal_scan = msg->stop_gimbal_scan;
     packet.chassis_spin_vel = msg->chassis_spin_vel;
 

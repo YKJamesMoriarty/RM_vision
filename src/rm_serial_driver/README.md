@@ -26,7 +26,7 @@ RoboMaster 算法系统与电控系统的串口通讯模块
 |:-------------------:|:----------:|:---------------:|
 | SendPacketVision    | 0xA5       | 输出敌方机器人状态用于电控解算 |
 | SendPacketTwist     | 0xA4       | 底盘导航控制                |
-| ReceivePacketGameStatus     | 0xA3       | 发送机器人控制命令   |
+| SendPacketTwist     | 0xA3       | 发送机器人控制命令   |
 | ReceivePacketVision | 0x5A       | 接收云台姿态用于自瞄         |
 | ReceivePacketAllRobotHP  | 0x5B  | 全体机器人血量信息           |
 | ReceivePacketGameStatus  | 0x5C  | 比赛阶段与时间信息           |
@@ -45,7 +45,7 @@ RoboMaster 算法系统与电控系统的串口通讯模块
 - linear: 线速度，包含 x, y, z 分量，分别代表沿 x, y, z 轴的线速度。单位 m/s
 - angular: 角速度，包含 x, y, z 分量，分别代表绕 x, y, z 轴的角速度。单位 rad/s
 
-### SendPacketScanStatus
+### SendPacketRobotControl
 
 - stop_gimbal_scan: bool 型，云台是否停止扫描模式
 - chassis_spin_vel: float 型，底盘小陀螺速度。单位 rad/s
