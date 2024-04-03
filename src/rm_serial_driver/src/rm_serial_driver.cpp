@@ -100,9 +100,10 @@ RMSerialDriver::RMSerialDriver(const rclcpp::NodeOptions & options)
     "/tracker/target", rclcpp::SensorDataQoS(),
     std::bind(&RMSerialDriver::sendDataVision, this, std::placeholders::_1));
   cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
-    "/cmd_vel", 10, std::bind(&RMSerialDriver::sendDataTwist, this, std::placeholders::_1));
+    "/cmd_vel_chassis", rclcpp::QoS(rclcpp::KeepLast(1)),
+    std::bind(&RMSerialDriver::sendDataTwist, this, std::placeholders::_1));
   robot_control_sub_ = this->create_subscription<rm_decision_interfaces::msg::RobotControl>(
-    "/robot_control", 10,
+    "/robot_control", rclcpp::QoS(rclcpp::KeepLast(1)),
     std::bind(&RMSerialDriver::sendRobotControl, this, std::placeholders::_1));
 }
 
