@@ -8,7 +8,7 @@
   <description>A template for ROS packages.</description>
   <license>MIT</license>
   <author email="chen.junn@outlook.com">Chen Jun</author>
-  <maintainer email="1120220476@smbu.edu.cn">Lihan Chen</maintainer>
+  <maintainer email="lihanchen2004@163.com">Lihan Chen</maintainer>
 
   <!-- buildtool_depend: dependencies of the build process -->
   <buildtool_depend>ament_cmake</buildtool_depend>
