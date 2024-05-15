@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.8)
 project(rm_auto_aim)
 
+if(CMAKE_EXPORT_COMPILE_COMMANDS)
+  set(CMAKE_EXPORT_COMPILE_COMMANDS ${CMAKE_EXPORT_COMPILE_COMMANDS})
+endif()
+
 find_package(ament_cmake_auto REQUIRED)
 
 if(BUILD_TESTING)
