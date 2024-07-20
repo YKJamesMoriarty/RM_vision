@@ -17,8 +17,14 @@ public:
   explicit SimCameraNode(const rclcpp::NodeOptions & options) : Node("sim_camera", options)
   {
     RCLCPP_INFO(this->get_logger(), "Starting SimCameraNode!");
-
-    camera_pub_ = this->create_publisher<sensor_msgs::msg::CameraInfo>("/camera_info", 10);
+    camera_pub_ = image_transport::create_camera_publisher(this, "image_raw");
+    
+    image_msg_.header.frame_id = "camera_optical_frame";
+    image_msg_.encoding = "rgb8";
+    // Sub image msg
+    img_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
+      "/blue_standard_robot1/front_camera/image", 10, std::bind(&SimCameraNode::imageCallback, this, std::placeholders::_1));
+    
     // Load camera info
     camera_name_ = this->declare_parameter("camera_name", "sim_camera");
     camera_info_manager_ =
@@ -34,15 +40,6 @@ public:
 
     params_callback_handle_ = this->add_on_set_parameters_callback(
       std::bind(&SimCameraNode::parametersCallback, this, std::placeholders::_1));
-
-    capture_thread_ = std::thread{[this]() -> void {
-
-      RCLCPP_INFO(this->get_logger(), "Publishing camera info!");
-
-      while (rclcpp::ok()) {
-          camera_pub_->publish(camera_info_msg_);
-      }
-    }};
   }
 
   ~SimCameraNode() override
@@ -105,8 +102,22 @@ private:
     return result;
   }
 
+  void imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr img_msg)
+  {
+    // RCLCPP_INFO(this->get_logger(), "Received image message");
+    image_msg_.header.stamp = this->now();
+    image_msg_.height = img_msg->height;
+    image_msg_.width = img_msg->width;
+    image_msg_.step = img_msg->step;
+    image_msg_.data = img_msg->data;
+    camera_info_msg_.header = image_msg_.header;
+    camera_pub_.publish(image_msg_, camera_info_msg_);
+  }
+
   sensor_msgs::msg::Image image_msg_;
-  rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr camera_pub_;
+  image_transport::CameraPublisher camera_pub_;
+  // Image subscrpition
+  rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr img_sub_;
   void * camera_handle_;
 
   std::string camera_name_;

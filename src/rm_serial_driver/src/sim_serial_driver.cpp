@@ -51,6 +51,9 @@ tf_broadcaster_(std::make_unique<tf2_ros::TransformBroadcaster>(*this)),
 
     detector_param_client_ = std::make_shared<rclcpp::AsyncParametersClient>(this, "armor_detector");
 
+    // Tracker reset service client
+    // reset_tracker_client_ = this->create_client<std_srvs::srv::Trigger>("tracker/reset");
+
     if (!initial_set_param_) {
             setParam(rclcpp::Parameter("detect_color", 0));
           }
@@ -80,7 +83,7 @@ void SimSerialDriver::publishOdomToGimbalTransform()
 
       // Broadcast the transform
       tf_broadcaster_->sendTransform(odom_to_gimbal);
-      RCLCPP_INFO(this->get_logger(), "tf send success");
+      // RCLCPP_INFO(this->get_logger(), "tf send success");
     } catch (tf2::TransformException & ex) {
       RCLCPP_ERROR(this->get_logger(), "Transform error: %s", ex.what());
     }
@@ -115,6 +118,18 @@ void SimSerialDriver::setParam(const rclcpp::Parameter & param)
         initial_set_param_ = true;
       });
   }
+}
+
+void SimSerialDriver::resetTracker()
+{
+  if (!reset_tracker_client_->service_is_ready()) {
+    RCLCPP_WARN(get_logger(), "Service not ready, skipping tracker reset");
+    return;
+  }
+
+  auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+  reset_tracker_client_->async_send_request(request);
+  RCLCPP_INFO(get_logger(), "Reset tracker!");
 }
 SimSerialDriver::~SimSerialDriver()
 {

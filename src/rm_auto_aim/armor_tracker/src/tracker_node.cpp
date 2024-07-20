@@ -136,7 +136,7 @@ ArmorTrackerNode::ArmorTrackerNode(const rclcpp::NodeOptions & options)
   tf2_buffer_->setCreateTimerInterface(timer_interface);
   tf2_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf2_buffer_);
   // subscriber and filter
-  armors_sub_.subscribe(this, "/detector/armors", rmw_qos_profile_sensor_data);
+  armors_sub_.subscribe(this, "detector/armors", rmw_qos_profile_sensor_data);
   target_frame_ = this->declare_parameter("target_frame", "odom");
   tf2_filter_ = std::make_shared<tf2_filter>(
     armors_sub_, *tf2_buffer_, target_frame_, 10, this->get_node_logging_interface(),
@@ -145,11 +145,11 @@ ArmorTrackerNode::ArmorTrackerNode(const rclcpp::NodeOptions & options)
   tf2_filter_->registerCallback(&ArmorTrackerNode::armorsCallback, this);
 
   // Measurement publisher (for debug usage)
-  info_pub_ = this->create_publisher<auto_aim_interfaces::msg::TrackerInfo>("/tracker/info", 10);
+  info_pub_ = this->create_publisher<auto_aim_interfaces::msg::TrackerInfo>("tracker/info", 10);
 
   // Publisher
   target_pub_ = this->create_publisher<auto_aim_interfaces::msg::Target>(
-    "/tracker/target", rclcpp::SensorDataQoS());
+    "tracker/target", rclcpp::SensorDataQoS());
 
   // Visualization Marker Publisher
   // See http://wiki.ros.org/rviz/DisplayTypes/Marker
@@ -178,7 +178,7 @@ ArmorTrackerNode::ArmorTrackerNode(const rclcpp::NodeOptions & options)
   armor_marker_.scale.z = 0.125;
   armor_marker_.color.a = 1.0;
   armor_marker_.color.r = 1.0;
-  marker_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("/tracker/marker", 10);
+  marker_pub_ = this->create_publisher<visualization_msgs::msg::MarkerArray>("tracker/marker", 10);
 }
 
 void ArmorTrackerNode::armorsCallback(const auto_aim_interfaces::msg::Armors::SharedPtr armors_msg)

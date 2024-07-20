@@ -42,13 +42,12 @@ def generate_launch_description():
             package='robot_state_publisher',
             executable='robot_state_publisher',
             remappings=remappings,
-            namespace=namespace,
             parameters=[{'robot_description': robot_description,
                         'publish_frequency': 1000.0}]
         ),
         ComposableNodeContainer(
             name='camera_detector_container',
-            namespace=namespace,
+            namespace='',
             package='rclcpp_components',
             executable='component_container',
             remappings=remappings,

@@ -36,7 +36,7 @@ ArmorDetectorNode::ArmorDetectorNode(const rclcpp::NodeOptions & options)
 
   // Armors Publisher
   armors_pub_ = this->create_publisher<auto_aim_interfaces::msg::Armors>(
-    "/detector/armors", rclcpp::SensorDataQoS());
+    "detector/armors", rclcpp::SensorDataQoS());
 
   // Visualization Marker Publisher
   // See http://wiki.ros.org/rviz/DisplayTypes/Marker
@@ -61,7 +61,7 @@ ArmorDetectorNode::ArmorDetectorNode(const rclcpp::NodeOptions & options)
   text_marker_.lifetime = rclcpp::Duration::from_seconds(0.1);
 
   marker_pub_ =
-    this->create_publisher<visualization_msgs::msg::MarkerArray>("/detector/marker", 10);
+    this->create_publisher<visualization_msgs::msg::MarkerArray>("detector/marker", 10);
 
   // Debug Publishers
   debug_ = this->declare_parameter("debug", false);
@@ -78,7 +78,7 @@ ArmorDetectorNode::ArmorDetectorNode(const rclcpp::NodeOptions & options)
     });
 
   cam_info_sub_ = this->create_subscription<sensor_msgs::msg::CameraInfo>(
-    "/camera_info", rclcpp::SensorDataQoS(),
+    "camera_info", rclcpp::SensorDataQoS(),
     [this](sensor_msgs::msg::CameraInfo::ConstSharedPtr camera_info) {
       cam_center_ = cv::Point2f(camera_info->k[2], camera_info->k[5]);
       cam_info_ = std::make_shared<sensor_msgs::msg::CameraInfo>(*camera_info);
@@ -86,12 +86,12 @@ ArmorDetectorNode::ArmorDetectorNode(const rclcpp::NodeOptions & options)
       cam_info_sub_.reset();
     });
 
-  // img_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
-  //   "/image_raw", rclcpp::SensorDataQoS(),
-  //   std::bind(&ArmorDetectorNode::imageCallback, this, std::placeholders::_1));
   img_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
-    "/blue_standard_robot1/front_camera/image", rclcpp::SensorDataQoS(),
+    "image_raw", rclcpp::SensorDataQoS(),
     std::bind(&ArmorDetectorNode::imageCallback, this, std::placeholders::_1));
+  // img_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
+  //   "/blue_standard_robot1/front_camera/image", rclcpp::SensorDataQoS(),
+  //   std::bind(&ArmorDetectorNode::imageCallback, this, std::placeholders::_1));
 }
 
 void ArmorDetectorNode::imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr img_msg)
@@ -258,13 +258,13 @@ std::vector<Armor> ArmorDetectorNode::detectArmors(
 void ArmorDetectorNode::createDebugPublishers()
 {
   lights_data_pub_ =
-    this->create_publisher<auto_aim_interfaces::msg::DebugLights>("/detector/debug_lights", 10);
+    this->create_publisher<auto_aim_interfaces::msg::DebugLights>("detector/debug_lights", 10);
   armors_data_pub_ =
-    this->create_publisher<auto_aim_interfaces::msg::DebugArmors>("/detector/debug_armors", 10);
+    this->create_publisher<auto_aim_interfaces::msg::DebugArmors>("detector/debug_armors", 10);
 
-  binary_img_pub_ = image_transport::create_publisher(this, "/detector/binary_img");
-  number_img_pub_ = image_transport::create_publisher(this, "/detector/number_img");
-  result_img_pub_ = image_transport::create_publisher(this, "/detector/result_img");
+  binary_img_pub_ = image_transport::create_publisher(this, "detector/binary_img");
+  number_img_pub_ = image_transport::create_publisher(this, "detector/number_img");
+  result_img_pub_ = image_transport::create_publisher(this, "detector/result_img");
 }
 
 void ArmorDetectorNode::destroyDebugPublishers()
