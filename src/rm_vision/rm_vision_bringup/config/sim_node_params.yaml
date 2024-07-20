@@ -1,17 +1,10 @@
-/camera_node:
+/sim_camera_node:
   ros__parameters:
     camera_info_url: package://rm_vision_bringup/config/sim_camera_info.yaml
-    exposure_time: 2500
-    gain: 12.0
 
-/serial_driver:
+/sim_serial_driver:
   ros__parameters:
     timestamp_offset: 0.006
-    device_name: /dev/ttyACM0
-    baud_rate: 115200
-    flow_control: none
-    parity: none
-    stop_bits: "1"
 
 /armor_detector:
   ros__parameters:
@@ -45,16 +38,3 @@
 
       tracking_thres: 5
       lost_time_thres: 1.0
-
-/rm_rune_detector:
-  ros__parameters:
-    debug: true
-
-    detect_color: 0
-    binary_thres: 80
-
-    # light.min_ratio: 0.1
-    # rune.min_light_ratio: 0.8
-
-    # classifier_threshold: 0.8
-    # ignore_classes: ["negative"]

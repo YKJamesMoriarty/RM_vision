@@ -86,8 +86,11 @@ ArmorDetectorNode::ArmorDetectorNode(const rclcpp::NodeOptions & options)
       cam_info_sub_.reset();
     });
 
+  // img_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
+  //   "/image_raw", rclcpp::SensorDataQoS(),
+  //   std::bind(&ArmorDetectorNode::imageCallback, this, std::placeholders::_1));
   img_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
-    "/image_raw", rclcpp::SensorDataQoS(),
+    "/blue_standard_robot1/front_camera/image", rclcpp::SensorDataQoS(),
     std::bind(&ArmorDetectorNode::imageCallback, this, std::placeholders::_1));
 }
 

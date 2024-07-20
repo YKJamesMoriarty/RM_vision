@@ -17,6 +17,7 @@ ament_auto_find_build_dependencies()
 
 ament_auto_add_library(${PROJECT_NAME} SHARED
   src/hik_camera_node.cpp
+  src/sim_camera_node.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC hikSDK/include)
@@ -48,6 +49,11 @@ target_link_libraries(${PROJECT_NAME}
 rclcpp_components_register_node(${PROJECT_NAME}
   PLUGIN hik_camera::HikCameraNode
   EXECUTABLE ${PROJECT_NAME}_node
+)
+
+rclcpp_components_register_node(${PROJECT_NAME}
+  PLUGIN sim_camera::SimCameraNode
+  EXECUTABLE sim_camera_node
 )
 
 if(BUILD_TESTING)
