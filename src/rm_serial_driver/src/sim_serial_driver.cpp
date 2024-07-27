@@ -49,28 +49,32 @@ tf_broadcaster_(std::make_unique<tf2_ros::TransformBroadcaster>(*this)),
     RCLCPP_INFO(get_logger(), "Start SimSerialDriver!");
     timestamp_offset_ = this->declare_parameter("timestamp_offset", 0.0);
 
+    auto timer_callback = [this]() {this->publishOdomToGimbalTransform();};
+    timer_ = this->create_wall_timer(
+      rclcpp::Rate(10).period(), timer_callback); // Set the rate as needed
     detector_param_client_ = std::make_shared<rclcpp::AsyncParametersClient>(this, "armor_detector");
 
     // Tracker reset service client
     // reset_tracker_client_ = this->create_client<std_srvs::srv::Trigger>("tracker/reset");
+    while(rclcpp::ok()){
 
-    if (!initial_set_param_) {
-            setParam(rclcpp::Parameter("detect_color", 0));
-          }
+      if (!initial_set_param_) {
+                setParam(rclcpp::Parameter("detect_color", 0));
+              }
+    }
+    
     // Initialize the TF listener
     // tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_, this);
 
     // Set up the timer to periodically check for transform updates
-    auto timer_callback = [this]() {this->publishOdomToGimbalTransform();};
-    timer_ = this->create_wall_timer(
-      rclcpp::Rate(10).period(), timer_callback); // Set the rate as needed
+    
   }
 void SimSerialDriver::publishOdomToGimbalTransform()
   {
     try {
       // Lookup the latest transform between "chassis" and "gimbal_pitch"
       geometry_msgs::msg::TransformStamped transform;
-      transform = tf_buffer_->lookupTransform("chassis", "gimbal_yaw", rclcpp::Time(0));
+      transform = tf_buffer_->lookupTransform("chassis", "gimbal_pitch", rclcpp::Time(0));
 
       // Create a new transformStamped message for "odom" to "gimbal_link"
       geometry_msgs::msg::TransformStamped odom_to_gimbal;
@@ -82,7 +86,7 @@ void SimSerialDriver::publishOdomToGimbalTransform()
       tf2::doTransform(transform, odom_to_gimbal, odom_to_gimbal);
 
       // Broadcast the transform
-      tf_broadcaster_->sendTransform(odom_to_gimbal);
+      // tf_broadcaster_->sendTransform(odom_to_gimbal);
       // RCLCPP_INFO(this->get_logger(), "tf send success");
     } catch (tf2::TransformException & ex) {
       RCLCPP_ERROR(this->get_logger(), "Transform error: %s", ex.what());
@@ -97,7 +101,7 @@ void SimSerialDriver::publishOdomToGimbalTransform()
 void SimSerialDriver::setParam(const rclcpp::Parameter & param)
 {
   if (!detector_param_client_->service_is_ready()) {
-    RCLCPP_WARN(get_logger(), "Armor service not ready, skipping parameter set");
+    // RCLCPP_WARN(get_logger(), "Armor service not ready, skipping parameter set");
     return;
   }
 

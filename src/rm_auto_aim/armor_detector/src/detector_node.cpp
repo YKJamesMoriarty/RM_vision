@@ -64,7 +64,7 @@ ArmorDetectorNode::ArmorDetectorNode(const rclcpp::NodeOptions & options)
     this->create_publisher<visualization_msgs::msg::MarkerArray>("detector/marker", 10);
 
   // Debug Publishers
-  debug_ = this->declare_parameter("debug", false);
+  debug_ = this->declare_parameter("debug", true);
   if (debug_) {
     createDebugPublishers();
   }

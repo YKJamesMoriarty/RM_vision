@@ -19,11 +19,19 @@ public:
     RCLCPP_INFO(this->get_logger(), "Starting SimCameraNode!");
     camera_pub_ = image_transport::create_camera_publisher(this, "image_raw");
     
-    image_msg_.header.frame_id = "camera_optical_frame";
+    image_msg_.header.frame_id = "fonr_industrial_camera";
     image_msg_.encoding = "rgb8";
-    // Sub image msg
+    // 创建QoS策略
+    rclcpp::QoS custom_qos(1000); // 队列大小为1000
+    custom_qos.reliability(RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT);
+    custom_qos.history(RMW_QOS_POLICY_HISTORY_KEEP_LAST);
+    custom_qos.durability(RMW_QOS_POLICY_DURABILITY_VOLATILE);
+
+    // 使用自定义的QoS创建订阅
     img_sub_ = this->create_subscription<sensor_msgs::msg::Image>(
-      "/blue_standard_robot1/front_camera/image", 10, std::bind(&SimCameraNode::imageCallback, this, std::placeholders::_1));
+      "front_camera/image", 
+      custom_qos, 
+      std::bind(&SimCameraNode::imageCallback, this, std::placeholders::_1));
     
     // Load camera info
     camera_name_ = this->declare_parameter("camera_name", "sim_camera");

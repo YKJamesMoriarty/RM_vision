@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 // OpenCV
+#include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/core/base.hpp>
 #include <opencv2/core/mat.hpp>
@@ -42,7 +43,11 @@ std::vector<Armor> Detector::detect(const cv::Mat & input)
 cv::Mat Detector::preprocessImage(const cv::Mat & rgb_img)
 {
   cv::Mat gray_img;
-  cv::cvtColor(rgb_img, gray_img, cv::COLOR_RGB2GRAY);
+  // cv::cvtColor(rgb_img, gray_img, cv::COLOR_RGB2GRAY);
+
+  std::vector<cv::Mat> channels(3);
+  cv::split(rgb_img, channels);
+  gray_img = channels[0];
 
   cv::Mat binary_img;
   cv::threshold(gray_img, binary_img, binary_thres, 255, cv::THRESH_BINARY);

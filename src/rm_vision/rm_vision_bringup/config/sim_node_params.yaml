@@ -21,7 +21,7 @@
 
 /armor_tracker:
   ros__parameters:
-    target_frame: odom
+    target_frame: fonr_industrial_camera
     max_armor_distance: 10.0
 
     ekf:
