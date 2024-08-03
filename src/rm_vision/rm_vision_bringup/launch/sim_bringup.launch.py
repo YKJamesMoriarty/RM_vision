@@ -38,13 +38,13 @@ def generate_launch_description():
         PushRosNamespace(
             condition=IfCondition(use_namespace),
             namespace=namespace),
-        # Node(
-        #     package='robot_state_publisher',
-        #     executable='robot_state_publisher',
-        #     remappings=remappings,
-        #     parameters=[{'robot_description': robot_description,
-        #                 'publish_frequency': 1000.0}]
-        # ),
+        Node(
+            package='robot_state_publisher',
+            executable='robot_state_publisher',
+            remappings=remappings,
+            parameters=[{'robot_description': robot_description,
+                        'publish_frequency': 1000.0}]
+        ),
         ComposableNodeContainer(
             name='camera_detector_container',
             namespace='',

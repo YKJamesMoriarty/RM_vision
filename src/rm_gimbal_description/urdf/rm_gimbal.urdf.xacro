@@ -24,12 +24,12 @@
     <axis xyz="0 0 0" />
   </joint>
 
-  <link name="camera_optical_frame" />
+  <link name="fonr_industrial_camera" />
 
   <joint name="camera_optical_joint" type="fixed">
     <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}" />
     <parent link="camera_link" />
-    <child link="camera_optical_frame" />
+    <child link="fonr_industrial_camera" />
   </joint>
 
 </robot>

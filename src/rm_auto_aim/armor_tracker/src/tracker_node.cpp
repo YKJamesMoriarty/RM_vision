@@ -3,6 +3,7 @@
 
 // STD
 #include <memory>
+#include <rclcpp/logging.hpp>
 #include <vector>
 
 namespace rm_auto_aim
@@ -117,7 +118,7 @@ ArmorTrackerNode::ArmorTrackerNode(const rclcpp::NodeOptions & options)
   using std::placeholders::_2;
   using std::placeholders::_3;
   reset_tracker_srv_ = this->create_service<std_srvs::srv::Trigger>(
-    "/tracker/reset", [this](
+    "tracker/reset", [this](
                         const std_srvs::srv::Trigger::Request::SharedPtr,
                         std_srvs::srv::Trigger::Response::SharedPtr response) {
       tracker_->tracker_state = Tracker::LOST;
@@ -128,7 +129,8 @@ ArmorTrackerNode::ArmorTrackerNode(const rclcpp::NodeOptions & options)
 
   // Subscriber with tf2 message_filter
   // tf2 relevant
-  tf2_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
+  // tf2_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
+  tf2_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock(), tf2::durationFromSec(10.0));
   // Create the timer interface before call to waitForTransform,
   // to avoid a tf2_ros::CreateTimerInterfaceException exception
   auto timer_interface = std::make_shared<tf2_ros::CreateTimerROS>(
@@ -142,7 +144,7 @@ ArmorTrackerNode::ArmorTrackerNode(const rclcpp::NodeOptions & options)
   
   target_frame_ = this->declare_parameter("target_frame", "fonr_industrial_camera");
   tf2_filter_ = std::make_shared<tf2_filter>(
-    armors_sub_, *tf2_buffer_, target_frame_, 10, this->get_node_logging_interface(),
+    armors_sub_, *tf2_buffer_, target_frame_, 100, this->get_node_logging_interface(),
     this->get_node_clock_interface(), std::chrono::duration<int>(1));
   // Register a callback with tf2_ros::MessageFilter to be called when transforms are available
   tf2_filter_->registerCallback(&ArmorTrackerNode::armorsCallback, this);
@@ -191,6 +193,7 @@ ArmorTrackerNode::ArmorTrackerNode(const rclcpp::NodeOptions & options)
 void ArmorTrackerNode::armorsCallback(const auto_aim_interfaces::msg::Armors::SharedPtr armors_msg)
 {
   // Tranform armor position from image frame to world coordinate
+  // RCLCPP_INFO(get_logger(), "Transforming %i", armors_msg->header.stamp.sec);
   for (auto & armor : armors_msg->armors) {
     geometry_msgs::msg::PoseStamped ps;
     ps.header = armors_msg->header;
@@ -264,7 +267,6 @@ void ArmorTrackerNode::armorsCallback(const auto_aim_interfaces::msg::Armors::Sh
   }
 
   last_time_ = time;
-
   target_pub_->publish(target_msg);
 
   publishMarkers(target_msg);

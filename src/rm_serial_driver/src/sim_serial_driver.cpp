@@ -55,12 +55,18 @@ tf_broadcaster_(std::make_unique<tf2_ros::TransformBroadcaster>(*this)),
     detector_param_client_ = std::make_shared<rclcpp::AsyncParametersClient>(this, "armor_detector");
 
     // Tracker reset service client
-    // reset_tracker_client_ = this->create_client<std_srvs::srv::Trigger>("tracker/reset");
+    reset_tracker_client_ = this->create_client<std_srvs::srv::Trigger>("tracker/reset");
+    resetTracker();
+
     while(rclcpp::ok()){
 
       if (!initial_set_param_) {
                 setParam(rclcpp::Parameter("detect_color", 0));
               }
+      else{
+          resetTracker();
+        
+      }
     }
     
     // Initialize the TF listener
@@ -77,17 +83,14 @@ void SimSerialDriver::publishOdomToGimbalTransform()
       transform = tf_buffer_->lookupTransform("chassis", "gimbal_pitch", rclcpp::Time(0));
 
       // Create a new transformStamped message for "odom" to "gimbal_link"
-      geometry_msgs::msg::TransformStamped odom_to_gimbal;
-      odom_to_gimbal.header.stamp = this->now() + rclcpp::Duration::from_seconds(timestamp_offset_);
-      odom_to_gimbal.header.frame_id = "odom";
-      odom_to_gimbal.child_frame_id = "gimbal_link";
-
-      // Transform the received transform to the "odom" frame
-      tf2::doTransform(transform, odom_to_gimbal, odom_to_gimbal);
+      // odom_to_gimbal.header.stamp = this->now() + rclcpp::Duration::from_seconds(timestamp_offset_);
+      // RCLCPP_INFO(this->get_logger(), "odom_to_gimbal.header.stamp: %s" , std::to_string(odom_to_gimbal.header.stamp.sec).c_str());
+      transform.header.frame_id = "odom";
+      transform.child_frame_id = "gimbal_link";
 
       // Broadcast the transform
-      // tf_broadcaster_->sendTransform(odom_to_gimbal);
-      // RCLCPP_INFO(this->get_logger(), "tf send success");
+      tf_broadcaster_->sendTransform(transform);
+      RCLCPP_INFO(this->get_logger(), "tf send success");
     } catch (tf2::TransformException & ex) {
       RCLCPP_ERROR(this->get_logger(), "Transform error: %s", ex.what());
     }
