@@ -142,7 +142,8 @@ ArmorTrackerNode::ArmorTrackerNode(const rclcpp::NodeOptions & options)
   armors_sub_.subscribe(this, "detector/armors", rmw_qos_profile_sensor_data);
   std::cout<<"armors_sub has been runed"<<std::endl;
   
-  target_frame_ = this->declare_parameter("target_frame", "fonr_industrial_camera");
+  // target_frame_ = this->declare_parameter("target_frame", "fonr_industrial_camera");
+  target_frame_ = this->declare_parameter("target_frame", "gimbal_link");
   tf2_filter_ = std::make_shared<tf2_filter>(
     armors_sub_, *tf2_buffer_, target_frame_, 100, this->get_node_logging_interface(),
     this->get_node_clock_interface(), std::chrono::duration<int>(1));

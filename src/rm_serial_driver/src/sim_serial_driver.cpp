@@ -18,8 +18,10 @@
   ****************************(C) COPYRIGHT 2023 Polarbear*************************
   */
 
+#include <kdl/utilities/utility.h>
 #include <tf2/LinearMath/Quaternion.h>
 
+#include <chrono>
 #include <rclcpp/logging.hpp>
 #include <rclcpp/qos.hpp>
 #include <rclcpp/utilities.hpp>
@@ -33,10 +35,13 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <future>
 
 #include "rm_serial_driver/crc.hpp"
 #include "rm_serial_driver/packet.hpp"
 #include "rm_serial_driver/sim_serial_driver.hpp"
+#include <vision_interfaces/msg/robot.hpp>
+
 
 namespace sim_serial_driver
 {
@@ -49,9 +54,14 @@ tf_broadcaster_(std::make_unique<tf2_ros::TransformBroadcaster>(*this)),
     RCLCPP_INFO(get_logger(), "Start SimSerialDriver!");
     timestamp_offset_ = this->declare_parameter("timestamp_offset", 0.0);
 
-    auto timer_callback = [this]() {this->publishOdomToGimbalTransform();};
-    timer_ = this->create_wall_timer(
-      rclcpp::Rate(10).period(), timer_callback); // Set the rate as needed
+    // Create Publisher
+    latency_pub_ = this->create_publisher<std_msgs::msg::Float64>("latency", 10);
+    marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("aiming_point", 10);
+    robot_pub_ = this->create_publisher<vision_interfaces::msg::Robot>("serial_driver/robot", 10);
+
+    // 使用异步回调来替代定时器
+    timer_future_ = std::async(std::launch::async, &SimSerialDriver::timerTask, this);
+    
     detector_param_client_ = std::make_shared<rclcpp::AsyncParametersClient>(this, "armor_detector");
 
     // Tracker reset service client
@@ -64,39 +74,63 @@ tf_broadcaster_(std::make_unique<tf2_ros::TransformBroadcaster>(*this)),
                 setParam(rclcpp::Parameter("detect_color", 0));
               }
       else{
-          resetTracker();
+          // resetTracker();
         
       }
     }
-    
-    // Initialize the TF listener
-    // tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_, this);
-
-    // Set up the timer to periodically check for transform updates
+  
     
   }
-void SimSerialDriver::publishOdomToGimbalTransform()
-  {
-    try {
-      // Lookup the latest transform between "chassis" and "gimbal_pitch"
-      geometry_msgs::msg::TransformStamped transform;
-      transform = tf_buffer_->lookupTransform("chassis", "gimbal_pitch", rclcpp::Time(0));
 
-      // Create a new transformStamped message for "odom" to "gimbal_link"
-      // odom_to_gimbal.header.stamp = this->now() + rclcpp::Duration::from_seconds(timestamp_offset_);
-      // RCLCPP_INFO(this->get_logger(), "odom_to_gimbal.header.stamp: %s" , std::to_string(odom_to_gimbal.header.stamp.sec).c_str());
-      transform.header.frame_id = "odom";
-      transform.child_frame_id = "gimbal_link";
+void SimSerialDriver::timerTask()
+{
+    while (rclcpp::ok()) {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        publishOdomToGimbalTransform();
 
-      // Broadcast the transform
-      tf_broadcaster_->sendTransform(transform);
-      RCLCPP_INFO(this->get_logger(), "tf send success");
-    } catch (tf2::TransformException & ex) {
-      RCLCPP_ERROR(this->get_logger(), "Transform error: %s", ex.what());
+
     }
-  }
+}
 
-  void SimSerialDriver::getParams()
+void SimSerialDriver::publishOdomToGimbalTransform()
+{
+  // RCLCPP_INFO(this->get_logger(), "publishOdomToGimbalTransform called");
+
+  try {
+    // Lookup the latest transform between "chassis" and "gimbal_pitch"
+    geometry_msgs::msg::TransformStamped transform;
+    transform = tf_buffer_->lookupTransform("chassis", "gimbal_pitch", rclcpp::Time(0));
+    // RCLCPP_INFO(this->get_logger(), "lookupTransform success");
+
+    // Create a new transformStamped message for "odom" to "gimbal_link"
+    transform.header.frame_id = "gimbal_link";
+    transform.child_frame_id = "camera_link";
+    // If the transform does not exist, proceed to publish
+    tf_broadcaster_->sendTransform(transform);
+
+    // Change the transform to euler angles
+    tf2::Quaternion quat;
+    tf2::fromMsg(transform.transform.rotation, quat);
+    tf2::Matrix3x3 mat(quat);
+    double robot_roll, robot_pitch, robot_yaw;
+    mat.getRPY(robot_roll, robot_pitch, robot_yaw);
+
+    // RCLCPP_INFO(this->get_logger(), "tf send success");
+    // RCLCPP_INFO(this->get_logger(), "Pitch: %f, Yaw: %f", robot_pitch, robot_yaw);
+
+    // Publish the robot message
+    robot_msg.muzzle_speed = 20;
+    robot_msg.self_pitch = robot_pitch*180/M_PI;
+    robot_msg.self_yaw = robot_yaw*180/M_PI;
+    robot_pub_->publish(robot_msg);
+
+
+  } catch (tf2::TransformException & ex) {
+    RCLCPP_ERROR(this->get_logger(), "Transform error: %s", ex.what());
+  }
+}
+
+void SimSerialDriver::getParams()
 {
 
 }
@@ -138,9 +172,12 @@ void SimSerialDriver::resetTracker()
   reset_tracker_client_->async_send_request(request);
   RCLCPP_INFO(get_logger(), "Reset tracker!");
 }
+
 SimSerialDriver::~SimSerialDriver()
 {
-
+    if (timer_future_.valid()) {
+        timer_future_.wait();
+    }
 }
 }  // namespace sim_serial_driver
 

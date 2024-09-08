@@ -19,7 +19,8 @@ public:
     RCLCPP_INFO(this->get_logger(), "Starting SimCameraNode!");
     camera_pub_ = image_transport::create_camera_publisher(this, "image_raw");
     
-    image_msg_.header.frame_id = "fonr_industrial_camera";
+    image_msg_.header.frame_id = "camera_optical_frame";
+    // image_msg_.header.frame_id = "camera_link";
     image_msg_.encoding = "rgb8";
     // 创建QoS策略
     rclcpp::QoS custom_qos(1000); // 队列大小为1000
@@ -112,8 +113,7 @@ private:
 
   void imageCallback(const sensor_msgs::msg::Image::ConstSharedPtr img_msg)
   {
-    // RCLCPP_INFO(this->get_logger(), "Received image message");
-    image_msg_.header.stamp = this->now();
+    image_msg_.header.stamp = img_msg->header.stamp;
     image_msg_.height = img_msg->height;
     image_msg_.width = img_msg->width;
     image_msg_.step = img_msg->step;

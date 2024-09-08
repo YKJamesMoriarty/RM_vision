@@ -1,10 +1,13 @@
 /sim_camera_node:
   ros__parameters:
     camera_info_url: package://rm_vision_bringup/config/sim_camera_info.yaml
+    use_sim_time: True
 
 /sim_serial_driver:
   ros__parameters:
     timestamp_offset: 0.006
+    # timestamp_offset: 0.0
+    use_sim_time: True
 
 /armor_detector:
   ros__parameters:
@@ -19,10 +22,13 @@
     classifier_threshold: 0.8
     ignore_classes: ["negative"]
 
+    use_sim_time: True
+
 /armor_tracker:
   ros__parameters:
     target_frame: odom
     max_armor_distance: 10.0
+    use_sim_time: True
 
     ekf:
       sigma2_q_xyz: 0.05
@@ -38,3 +44,16 @@
 
       tracking_thres: 5
       lost_time_thres: 1.0
+
+/vision_attacker:
+  ros__parameters:
+    use_sim_time: True
+    trajectory:
+      lag_time: 0.1
+      air_k: 0.04
+      yaw_fix: 0.5
+      pitch_fix: -0.5
+    fire_ctrl:
+      car_attack_threshold: 85.0
+      outpost_attack_threshold: 5.0
+      threshold_fix: 0.0

@@ -24,33 +24,42 @@ def generate_launch_description():
     launch_params = yaml.safe_load(open(os.path.join(
     get_package_share_directory('rm_vision_bringup'), 'config', 'launch_params.yaml')))
 
+    # robot_description = Command(['xacro ', os.path.join(
+    #     get_package_share_directory('rm_gimbal_description'), 'urdf', 'rm_gimbal.urdf.xacro'),
+    #     ' xyz:=', launch_params['odom2camera']['xyz'], ' rpy:=', launch_params['odom2camera']['rpy']])
+    
     robot_description = Command(['xacro ', os.path.join(
         get_package_share_directory('rm_gimbal_description'), 'urdf', 'rm_gimbal.urdf.xacro'),
-        ' xyz:=', launch_params['odom2camera']['xyz'], ' rpy:=', launch_params['odom2camera']['rpy']])
+        ' xyz:=', launch_params['gimbal_odom2camera']['xyz'], ' rpy:=', launch_params['gimbal_odom2camera']['rpy']])
 
     node_params = os.path.join(
         get_package_share_directory('rm_vision_bringup'), 'config', 'sim_node_params.yaml')
     
-    remappings = [('/tf', '/blue_standard_robot1/tf'),
-                  ('/tf_static', '/blue_standard_robot1/tf_static')]
+    # remappings = [('/tf', '/blue_standard_robot1/tf'),
+    #               ('/tf_static', '/blue_standard_robot1/tf_static')]
+    remappings = [('/tf', 'tf'),
+                  ('/tf_static', 'tf_static')]
     
     bringup_cmd_group = GroupAction([
         PushRosNamespace(
             condition=IfCondition(use_namespace),
             namespace=namespace),
         Node(
+            name='robot_state_publisher_666',
             package='robot_state_publisher',
             executable='robot_state_publisher',
-            remappings=remappings,
+            # namespace=namespace,
+            # remappings=remappings,
             parameters=[{'robot_description': robot_description,
-                        'publish_frequency': 1000.0}]
+                        'publish_frequency': 1000.0,
+                        'use_sim_time': True}]  # 添加 use_sim_time 参数
         ),
         ComposableNodeContainer(
             name='camera_detector_container',
             namespace='',
             package='rclcpp_components',
             executable='component_container',
-            remappings=remappings,
+            # remappings=remappings,
             composable_node_descriptions=[
                 ComposableNode(
                     package='hik_camera',
@@ -63,6 +72,13 @@ def generate_launch_description():
                     package='armor_detector',
                     plugin='rm_auto_aim::ArmorDetectorNode',
                     name='armor_detector',
+                    parameters=[node_params],
+                    extra_arguments=[{'use_intra_process_comms': True}]
+                ),
+                ComposableNode(
+                    package='vision_attacker',
+                    plugin='vision_attacker::VisionAttacker',
+                    name='vision_attacker',
                     parameters=[node_params],
                     extra_arguments=[{'use_intra_process_comms': True}]
                 )
@@ -99,10 +115,11 @@ def generate_launch_description():
                     output='both',
                     emulate_tty=True,
                     parameters=[node_params],
-                    remappings=remappings,
+                    # remappings=remappings,
                     ros_arguments=['--log-level', 'armor_tracker:='+launch_params['tracker_log_level']],
                     )],
-        )
+        ),
+        
         
 
     ])

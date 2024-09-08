@@ -36,6 +36,7 @@
 #include <std_msgs/msg/float64.hpp>
 #include <std_srvs/srv/trigger.hpp>
 #include <visualization_msgs/msg/marker.hpp>
+#include <vision_interfaces/msg/robot.hpp>
 
 // C++ system
 
@@ -59,6 +60,7 @@ private:
   void getParams();
   void setParam(const rclcpp::Parameter & param);
   void resetTracker();
+  void timerTask();
 
 
   // Param client to set detect_colr
@@ -75,6 +77,16 @@ private:
   std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
   rclcpp::TimerBase::SharedPtr timer_;
+  std::future<void> timer_future_; 
+
+  // For debug usage
+  rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr latency_pub_;
+  rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_pub_;
+
+  //For vision attacker
+  vision_interfaces::msg::Robot robot_msg;
+  rclcpp::Publisher<vision_interfaces::msg::Robot>::SharedPtr robot_pub_;
+
 };
 }  // namespace sim_serial_driver
 
